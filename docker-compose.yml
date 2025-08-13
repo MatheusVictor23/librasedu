@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=librasedu_user
+      - POSTGRES_PASSWORD=librasedu_pass
+      - POSTGRES_DB=librasedu
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./apps/api
+    restart: always
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./apps/api:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://librasedu_user:librasedu_pass@postgres:5432/librasedu
+      - PORT=3000
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
