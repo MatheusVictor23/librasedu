@@ -20,13 +20,27 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - ./apps/api:/usr/src/app
-      - /usr/src/app/node_modules
+      - ./apps/api:/app
+      - /app/node_modules
     environment:
       - DATABASE_URL=postgresql://librasedu_user:librasedu_pass@postgres:5432/librasedu
       - PORT=3000
+    command: npm run dev
     depends_on:
       - postgres
+
+  # --- NOVO SERVIÇO DO FRONTEND ---
+  web:
+    build:
+      context: ./apps/web
+    restart: always
+    ports:
+      - "5173:5173" # Mapeia a porta do Vite
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules # Impede que o node_modules local sobrescreva o do container
+    depends_on:
+      - api # Garante que o frontend só inicie depois da API
 
 volumes:
   postgres_data:
