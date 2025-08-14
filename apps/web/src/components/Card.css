@@ -1,0 +1,8 @@
+/* src/components/Card.css */
+.card {
+  background-color: var(--cor-superficie);
+  border-radius: var(--borda-radius);
+  box-shadow: var(--sombra-padrao);
+  padding: 2rem;
+  width: 100%;
+}
