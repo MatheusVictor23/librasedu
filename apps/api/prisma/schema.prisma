@@ -1,15 +1,41 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma" 
+}
+
+model Usuario {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  nome            String
+  sinaisPropostos Sinal[]  @relation("SinaisPropostos")
+  sinaisAvaliados Sinal[]  @relation("SinaisAvaliados")
+}
+
+model AreaDeConhecimento {
+  id     Int     @id @default(autoincrement())
+  nome   String  @unique
+  sinais Sinal[]
+}
+
+model Sinal {
+  id                   Int      @id @default(autoincrement())
+  nome                 String   @unique
+  descricao            String
+  status               String   @default("PENDENTE")
+  proposal_video_url   String
+  official_youtube_url String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  area                 AreaDeConhecimento @relation(fields: [areaId], references: [id])
+  areaId               Int
+  proposer             Usuario            @relation("SinaisPropostos", fields: [proposerId], references: [id])
+  proposerId           Int
+  moderator            Usuario?           @relation("SinaisAvaliados", fields: [moderatorId], references: [id])
+  moderatorId          Int?
 }
