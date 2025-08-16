@@ -16,6 +16,7 @@ app.use('/api', sinalRoutes);
 
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`Servidor da API rodando na porta ${PORT}`);
   console.log(`Ambiente de desenvolvimento ativo em Manaus.`);
