@@ -9,33 +9,112 @@ generator client {
 }
 
 model Usuario {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
+  id              Int              @id @default(autoincrement())
+  idInstituicao   Int
   nome            String
-  sinaisPropostos Sinal[]  @relation("SinaisPropostos")
-  sinaisAvaliados Sinal[]  @relation("SinaisAvaliados")
+  cpf             String
+  email           String           @unique
+  senha           String
+  role            Role             @default(USER)
+  sinaisPropostos SinalProposto[]  @relation("SinaisPropostos")
+  sinaisAvaliados SinalProposto[]  @relation("SinaisAvaliados")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt()
+
+  instituicao     Instituicao      @relation(fields: [idInstituicao], references: [id])
+
+  SinalFavorito SinalFavorito[]
+} 
+
+enum Role {
+  USER
+  AVALIADOR
+  ADMIN
 }
 
-model AreaDeConhecimento {
-  id     Int     @id @default(autoincrement())
-  nome   String  @unique
-  sinais Sinal[]
+model Instituicao {
+  id        Int      @id @default(autoincrement())
+  nome      String   @unique
+  sigla     String
+  usuarios  Usuario[]
+  createdAt DateTime @default(now())
+}
+
+model AreaConhecimento {
+  id        Int      @id @default(autoincrement())
+  nome      String   @unique
+  cursos    Curso[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+model Curso {
+  id                Int                @id @default(autoincrement())
+  nome              String             @unique
+  disciplinas       Disciplina[]
+  areasConhecimento AreaConhecimento[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt()
+}
+
+model Disciplina {
+  id              Int             @id @default(autoincrement())
+  idCurso         Int
+  nome            String          @unique
+  cargaHoraria    String
+  sinais          Sinal[]
+  sinaisPropostos SinalProposto[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt()
+
+  curso           Curso           @relation(fields: [idCurso], references: [id])
 }
 
 model Sinal {
-  id                   Int      @id @default(autoincrement())
-  nome                 String   @unique
-  descricao            String
-  status               String   @default("PENDENTE")
-  proposal_video_url   String
-  official_youtube_url String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id              Int         @id @default(autoincrement())
+  sinalPropostoId Int
+  disciplinaId    Int
+  nome            String      @unique
+  descricao       String
+  videoUrl        String
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  area                 AreaDeConhecimento @relation(fields: [areaId], references: [id])
-  areaId               Int
-  proposer             Usuario            @relation("SinaisPropostos", fields: [proposerId], references: [id])
+  disciplina      Disciplina    @relation(fields: [disciplinaId], references: [id])
+  sinalProposto   SinalProposto @relation(fields: [sinalPropostoId], references: [id])
+
+  SinalFavorito SinalFavorito[]
+}
+
+model SinalProposto {
+  id                   Int       @id @default(autoincrement())
+  disciplinaId         Int
   proposerId           Int
-  moderator            Usuario?           @relation("SinaisAvaliados", fields: [moderatorId], references: [id])
-  moderatorId          Int?
+  avaliadorId          Int?
+
+  nome                 String    @unique
+  descricao            String
+  videoUrl             String
+  comentariosAvaliador String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt 
+
+  disciplina Disciplina @relation(fields: [disciplinaId], references: [id])
+  proposer   Usuario    @relation("SinaisPropostos", fields: [proposerId], references:[id])
+  avaliador  Usuario?   @relation("SinaisAvaliados", fields: [avaliadorId], references:[id])
+  
+
+  Sinal Sinal[]
+}
+
+
+model SinalFavorito {
+  usuarioId Int
+  sinalId   Int
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  sinal   Sinal   @relation(fields: [sinalId],  references: [id])
+
+  @@id([usuarioId, sinalId])
 }
