@@ -1,26 +1,4 @@
 /* src/index.css */
-
-:root {
-  --cor-fundo: #f8f9fa;
-  --cor-superficie: #ffffff;
-  --cor-primaria: #28a745; /* Verde principal */
-  --cor-primaria-hover: #218838; /* Verde mais escuro para hover */
-  --cor-texto-principal: #212529;
-  --cor-texto-secundario: #6c757d;
-  --cor-borda: #dee2e6;
-
-  --sombra-padrao: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --borda-radius: 8px;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--cor-fundo);
-  color: var(--cor-texto-principal);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

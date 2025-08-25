@@ -1,7 +1,4 @@
 # apps/web/Dockerfile
-
-# --- MUDANÇA AQUI ---
-# Usando a imagem 'slim', que é baseada em Debian e muito mais compatível.
 FROM node:18-slim
 
 WORKDIR /app
@@ -13,4 +10,5 @@ COPY . .
 
 EXPOSE 5173
 
-CMD ["npm", "run", "dev", "--", "--host"]
+# Agora o CMD apenas executa o nosso script 'dev'
+CMD ["npm", "run", "dev"]
