@@ -1,0 +1,21 @@
+import { PrismaClient } from '../../generated/prisma/index.js';
+const prisma = new PrismaClient();
+
+const getAll = async () => {
+  return prisma.instituicao.findMany();
+};
+
+const create = async (data) => {
+  const { nome, sigla } = data;
+  return prisma.instituicao.create({
+    data: {
+      nome,
+      sigla,
+    },
+  });
+};
+
+export default {
+  getAll,
+  create,
+};
