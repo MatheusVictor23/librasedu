@@ -217,21 +217,29 @@ const RegisterPage = () => {
   
     return (
       <>
-        <section className="bg-brand-background-light w-full h-full relative">
-          <div className="container mx-auto w-screen px-6 lg:pt-12 flex flex-col md:flex-row items-center justify-between gap-12">
+        <section className="bg-brand-background-light w-full min-h-screen flex flex-col md:flex-row">
 
-            <div className="relative w-2/3 h-screen overflow-hidden">
-              {/* mancha azul 1 */}
-              <div className="absolute top-10 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-              {/* mancha azul 2 */}
-              <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40"></div>
-              
-              <div className="absolute bottom-20 right-10 w-92 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40"></div>
+          {/* lado esquerdo - imagens e manchas */}
+          <div className="relative w-full md:w-1/2 h-64 md:h-screen overflow-hidden hidden md:block">
+            {/* mancha azul 1 */}
+            <div className="absolute top-10 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
 
-              <img src={taipiriImg}/>
-            </div>
+            {/* mancha azul 2 */}
+            <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40"></div>
 
-            <div className="px-12 py-8 rounded-3xl shadow-2xl shadow-slate-400">
+            {/* mancha azul 3 */}
+            <div className="absolute top-5 right-20 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
+
+            {/* mancha azul 4 */}
+            <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-35"></div>
+
+            {/* imagem sobre o blur */}
+            <img src={taipiriImg} alt="Portal Tapiri" className="relative z-50 left-20" />
+          </div>
+
+          {/* lado direito - formulário */}
+          <div className="w-full md:w-1/2 flex items-center justify-start p-8 md:p-12">
+            <div className="w-full max-w-[80%] bg-white px-8 md:px-12 py-8 md:ml-2 rounded-3xl shadow-2xl shadow-slate-400">
               <div>
                 <h3 className="text-lg md:text-4xl font-bold leading-tight text-brand-blue">Cadastre-se</h3>
                 <p className="mt-2 mb-6 text-base text-brand-text-secondary max-w-xl md:mx-0 mx-auto">
