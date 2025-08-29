@@ -1,6 +1,6 @@
 // src/pages/HomePage.jsx
 
-import React from 'react';
+import React, {useState} from 'react';
 import MainLayout from '../layouts/MainLayout';
 import ContributeSection from '../components/ContributeSection';
 import RankingSection from '../components/RankingSection';
@@ -8,8 +8,10 @@ import Button from '../components/Button';
 import illustrationUrl from "../assets/ilustracao.png";
 import statsIllustration from '../assets/ilustracao2.png';
 import Footer from '../components/Footer';
+import { Link } from 'react-router-dom';
 
 const HomePage = () => {
+
   return (
     <>
       {/* Seção 1: Hero com o fundo branco "lavado" e padding ajustado */}
@@ -25,7 +27,7 @@ const HomePage = () => {
               Um espaço colaborativo onde a comunidade constrói o maior acervo de sinais do Brasil.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                <Button variant="primary">Cadastre-se</Button>
+                <Button variant="primary"><Link to={"/register"} className="no-underline">Cadastre-se</Link></Button>
                 <Button variant="secondary">Saiba mais ›</Button>
             </div>
           </div>
