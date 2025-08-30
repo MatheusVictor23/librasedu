@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import taipiriImg from "../assets/taipiriLogin.png";
 
 const RegisterPage = () => {
@@ -21,8 +21,8 @@ const RegisterPage = () => {
     sigla: ''
   });
 
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({}); //Um objeto que armazena os erros da página, o formato do erro utilizado é error.nome: error.message
+  const [isLoading, setIsLoading] = useState(false); //utilizado para a requisição para dar um tempo a requisição da api
 
   const navigate = useNavigate();
 
@@ -243,7 +243,7 @@ const RegisterPage = () => {
               <div>
                 <h3 className="text-lg md:text-4xl font-bold leading-tight text-brand-blue">Cadastre-se</h3>
                 <p className="mt-2 mb-6 text-base text-brand-text-secondary max-w-xl md:mx-0 mx-auto">
-                  Já possui conta? <span className="underline">Login</span>
+                  Já possui conta? <span className="underline text-brand-blue"><Link to={"/login"}>Login</Link></span>
                 </p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">

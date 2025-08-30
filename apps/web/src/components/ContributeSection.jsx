@@ -2,6 +2,7 @@
 import React from 'react';
 import { Handshake, Upload, MessageSquareQuote, ArrowRight } from 'lucide-react';
 import Button from './Button';
+import {useNavigate } from "react-router-dom";
 
 // Um sub-componente reutilizável para os cards de contribuição
 const ContributeCard = ({ icon, title, children }) => {
@@ -17,6 +18,9 @@ const ContributeCard = ({ icon, title, children }) => {
 };
 
 const ContributeSection = () => {
+
+  const navigate = useNavigate();
+  
   return (
     <section className="py-20">
       <div className="container mx-auto max-w-6xl px-6 text-center">
@@ -53,7 +57,7 @@ const ContributeSection = () => {
 
         {/* Botão de Chamada para Ação */}
         <div className="mt-16">
-          <Button variant="primary" className="inline-flex items-center gap-3">
+          <Button variant="primary" className="inline-flex items-center gap-3" onClick={() => navigate("/login")}>
             Participe agora!
             <ArrowRight size={20} />
           </Button>

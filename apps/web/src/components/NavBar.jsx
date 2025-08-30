@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const SearchIcon = () => (
     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -17,6 +18,8 @@ const Logo = () => (
 );
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
   return (
     // ALTERAÇÃO AQUI: Fundo com translucidez e efeito de desfoque
     <nav className="bg-brand-blue/95 backdrop-blur-sm w-full rounded-2xl shadow-lg">
@@ -48,7 +51,7 @@ const Navbar = () => {
                 placeholder="Buscar sinais..." 
               />
             </div>
-            <button className="py-2 px-5 text-sm font-semibold text-white rounded-full border-2 border-white/80 hover:bg-white/10 transition-colors duration-300">
+            <button className="py-2 px-5 text-sm font-semibold text-white rounded-full border-2 border-white/80 hover:bg-white/10 transition-colors duration-300" onClick={() => navigate("/login")}>
               Entrar
             </button>
           </div>
