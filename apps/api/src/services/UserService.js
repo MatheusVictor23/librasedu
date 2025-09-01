@@ -50,10 +50,35 @@ const remove = async (id) => {
   });
 };
 
+const getAllEvaluators = async () => {
+  return prisma.usuario.findMany({
+    where: {
+      role: 'AVALIADOR',
+    },
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
+const createEvaluator = async (evaluatorData) => {
+  const hashedPassword = await bcrypt.hash(evaluatorData.senha, 10);
+  
+  return prisma.usuario.create({
+    data: {
+      ...evaluatorData,
+      senha: hashedPassword,
+      role: 'AVALIADOR', // A role é definida diretamente como AVALIADOR
+    },
+  });
+};
+
 export default {
   getAll,
   getById,
   create,
   update,
   remove,
+  getAllEvaluators,   // <-- Adicionar
+  createEvaluator,    // <-- Adicionar
 };
