@@ -1,17 +1,21 @@
 // src/App.jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePageWrapper from './pages/HomePage';
-import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import RegisterPageWrapper from './pages/RegisterPage';
+import LoginPageWrapper from './pages/LoginPage'; 
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 
 function App() {
   return (
-  <BrowserRouter>
     <Routes>
-      <Route path='/' element={<HomePageWrapper />}/>
-      <Route path='/register' element={<RegisterPageWrapper/>}/>
+      <Route path='/' element={<HomePageWrapper />} />
+      <Route path='/register' element={<RegisterPageWrapper />} />
+      <Route path='/login' element={<LoginPageWrapper />} />
+      <Route path='/admin' element={<AdminDashboardPage />} />
+      <Route path='/admin/users' element={<AdminUsersPage />} />
     </Routes>
-  </BrowserRouter>
-);
+  );
 }
 
 export default App;

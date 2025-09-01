@@ -22,7 +22,7 @@ const ContributeSection = () => {
       <div className="container mx-auto max-w-6xl px-6 text-center">
         {/* ALTERAÇÃO AQUI: Adicionado o estilo 'text-shadow' para criar o contorno */}
         <h2 
-          className="text-3xl md:text-4xl font-bold text-black" 
+          className="text-3xl md:text-4xl font-bold text-brand-text-primary" 
         >
           Como você pode contribuir com o <span className="text-brand-blue">Portal Tapiri</span>?
         </h2>

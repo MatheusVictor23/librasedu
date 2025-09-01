@@ -1,6 +1,7 @@
 // src/components/Navbar.jsx
 
 import React from 'react';
+import { Link } from 'react-router-dom'; // 1. Importar o Link
 import { Home } from 'lucide-react';
 
 const SearchIcon = () => (
@@ -48,9 +49,11 @@ const Navbar = () => {
                 placeholder="Buscar sinais..." 
               />
             </div>
-            <button className="py-2 px-5 text-sm font-semibold text-white rounded-full border-2 border-white/80 hover:bg-white/10 transition-colors duration-300">
-              Entrar
-            </button>
+            <Link to="/login">
+              <button className="py-2 px-5 text-sm font-semibold text-white rounded-full border-2 border-white/80 hover:bg-white/10 transition-colors duration-300">
+                Entrar
+              </button>
+            </Link>
           </div>
 
         </div>
