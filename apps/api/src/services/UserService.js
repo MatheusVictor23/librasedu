@@ -1,4 +1,7 @@
+// src/services/UserService.js
 import { PrismaClient } from '../../generated/prisma/index.js';
+import bcrypt from 'bcryptjs';
+
 const prisma = new PrismaClient();
 
 const getAll = async () => {
@@ -19,12 +22,22 @@ const getById = async (id) => {
 };
 
 const create = async (userData) => {
+  // Faz o hash da senha antes de a guardar
+  const hashedPassword = await bcrypt.hash(userData.senha, 10);
+
   return prisma.usuario.create({
-    data: userData,
+    data: {
+      ...userData,
+      senha: hashedPassword,
+    },
   });
 };
 
 const update = async (id, userData) => {
+  // Adicionar lógica de hash aqui também se a senha puder ser atualizada
+  if (userData.senha) {
+    userData.senha = await bcrypt.hash(userData.senha, 10);
+  }
   return prisma.usuario.update({
     where: { id: parseInt(id) },
     data: userData,
