@@ -19,6 +19,7 @@ services:
     restart: always
     ports:
       - '3000:3000'
+      - '5555:5555'
     volumes:
       - ./apps/api:/app
       - /app/node_modules
