@@ -351,23 +351,6 @@ const RegisterPage = () => {
                 </div>
                   
                 <div className="space-y-2">
-                  <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                    Tipo de Usuário
-                  </label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="USER">Usuário</option>
-                    <option value="AVALIADOR">Avaliador</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
-                </div>
-                  
-                <div className="space-y-2">
                   <label htmlFor="instituicao" className="block text-sm font-medium text-gray-700">
                     Instituição *
                   </label>

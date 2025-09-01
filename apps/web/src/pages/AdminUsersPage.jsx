@@ -1,13 +1,18 @@
 // src/pages/AdminUsersPage.jsx
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../layouts/AdminLayout';
-import api from '../api/axiosConfig'; // Importamos a nossa instância configurada do axios
+import api from '../api/axiosConfig';
 import { Trash2, Edit } from 'lucide-react';
+import EditUserModal from '../components/admin/EditUserModal'; // 1. Importar o modal
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Estados para controlar o modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -25,6 +30,27 @@ const AdminUsersPage = () => {
 
     fetchUsers();
   }, []);
+
+    const handleEditClick = (user) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleSaveUser = async (userId, data) => {
+    try {
+      const response = await api.put(`/admin/users/${userId}`, data);
+      // Atualiza a lista de utilizadores com os novos dados
+      setUsers(users.map(user => user.id === userId ? response.data : user));
+      handleCloseModal();
+    } catch (err) {
+      alert('Erro ao atualizar o utilizador.');
+    }
+  };
 
   const handleDelete = async (userId) => {
     if (window.confirm('Tem a certeza de que quer apagar este utilizador?')) {
@@ -68,7 +94,7 @@ const AdminUsersPage = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-brand-blue hover:text-brand-blue-dark mr-4"><Edit size={18} /></button>
+                    <button onClick={() => handleEditClick(user)} className="text-brand-blue hover:text-brand-blue-dark mr-4"><Edit size={18} /></button>
                     <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
                   </td>
                 </tr>
@@ -77,6 +103,12 @@ const AdminUsersPage = () => {
           </table>
         </div>
       </div>
+      <EditUserModal 
+        isOpen={isModalOpen}
+        user={selectedUser}
+        onClose={handleCloseModal}
+        onSave={handleSaveUser}
+      />
     </AdminLayout>
   );
 };
