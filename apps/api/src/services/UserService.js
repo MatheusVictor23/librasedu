@@ -1,8 +1,5 @@
-// src/services/UserService.js
-import { PrismaClient } from '../../generated/prisma/index.js';
+import prisma from '../prismaClient.js';
 import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
 
 const getAll = async () => {
   return prisma.usuario.findMany({
@@ -22,9 +19,7 @@ const getById = async (id) => {
 };
 
 const create = async (userData) => {
-  // Faz o hash da senha antes de a guardar
   const hashedPassword = await bcrypt.hash(userData.senha, 10);
-
   return prisma.usuario.create({
     data: {
       ...userData,
@@ -34,7 +29,6 @@ const create = async (userData) => {
 };
 
 const update = async (id, userData) => {
-  // Adicionar lógica de hash aqui também se a senha puder ser atualizada
   if (userData.senha) {
     userData.senha = await bcrypt.hash(userData.senha, 10);
   }
@@ -50,6 +44,8 @@ const remove = async (id) => {
   });
 };
 
+
+// ADICIONE ESTAS DUAS NOVAS FUNÇÕES
 const getAllEvaluators = async () => {
   return prisma.usuario.findMany({
     where: {
@@ -67,10 +63,51 @@ const createEvaluator = async (evaluatorData) => {
   return prisma.usuario.create({
     data: {
       ...evaluatorData,
+      idInstituicao: parseInt(evaluatorData.idInstituicao, 10),
       senha: hashedPassword,
-      role: 'AVALIADOR', // A role é definida diretamente como AVALIADOR
+      role: 'AVALIADOR',
     },
   });
+};
+
+const getDashboardStats = async () => {
+  // Executa todas as contagens em paralelo para mais eficiência
+  const [totalUsers, totalEvaluators, totalProposals, totalOfficialSignals] = await prisma.$transaction([
+    prisma.usuario.count(),
+    prisma.usuario.count({ where: { role: 'AVALIADOR' } }),
+    prisma.sinalProposto.count(),
+    prisma.sinal.count(),
+  ]);
+
+  return {
+    totalUsers,
+    totalEvaluators,
+    totalProposals,
+    totalOfficialSignals,
+  };
+};
+
+const getRecentUsers = async (limit = 5) => {
+  return prisma.usuario.findMany({
+    take: limit,
+    orderBy: {
+      createdAt: 'desc',
+    },
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
+const getUsersByRole = async () => {
+  const roleCounts = await prisma.usuario.groupBy({
+    by: ['role'],
+    _count: {
+      role: true,
+    },
+  });
+  // O resultado será algo como: [{ role: 'USER', _count: { role: 10 } }, ...]
+  return roleCounts;
 };
 
 export default {
@@ -79,6 +116,9 @@ export default {
   create,
   update,
   remove,
-  getAllEvaluators,   // <-- Adicionar
-  createEvaluator,    // <-- Adicionar
+  getAllEvaluators,
+  createEvaluator,
+  getDashboardStats, 
+  getRecentUsers,
+  getUsersByRole
 };

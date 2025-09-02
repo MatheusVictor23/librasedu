@@ -72,7 +72,7 @@ model Disciplina {
 
 model Sinal {
   id              Int         @id @default(autoincrement())
-  sinalPropostoId Int
+  sinalPropostoId Int         @unique // <-- ADICIONE @unique AQUI
   disciplinaId    Int
   nome            String      @unique
   descricao       String
@@ -87,6 +87,12 @@ model Sinal {
   SinalFavorito SinalFavorito[]
 }
 
+enum PropostaStatus {
+  PENDENTE
+  APROVADO
+  REJEITADO
+}
+
 model SinalProposto {
   id                   Int       @id @default(autoincrement())
   disciplinaId         Int
@@ -97,6 +103,8 @@ model SinalProposto {
   descricao            String
   videoUrl             String
   comentariosAvaliador String?
+  // ADICIONE ESTA LINHA
+  status               PropostaStatus @default(PENDENTE)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt 
 
@@ -104,10 +112,8 @@ model SinalProposto {
   proposer   Usuario    @relation("SinaisPropostos", fields: [proposerId], references:[id])
   avaliador  Usuario?   @relation("SinaisAvaliados", fields: [avaliadorId], references:[id])
   
-
-  Sinal Sinal[]
+  Sinal      Sinal?
 }
-
 
 model SinalFavorito {
   usuarioId Int

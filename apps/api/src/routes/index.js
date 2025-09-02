@@ -8,6 +8,7 @@ import SinalPropostoRoutes from './SinalPropostoRoutes.js';
 import SinalRoutes from './SinalRoutes.js'; 
 import AuthRoutes from './AuthRoutes.js';
 import AdminRoutes from './AdminRoutes.js';
+import EvaluatorRoutes from './EvaluatorRoutes.js';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use(DisciplinaRoutes);
 router.use(SinalPropostoRoutes);
 router.use(SinalRoutes); 
 router.use(AdminRoutes);
+router.use(EvaluatorRoutes);
 
 export default router;

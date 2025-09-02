@@ -1,9 +1,8 @@
 // src/services/AuthService.js
-import { PrismaClient } from '../../generated/prisma/index.js';
+import prisma from '../prismaClient.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
 // Crie uma chave secreta para o JWT. Em produção, isto deve vir de uma variável de ambiente!
 const JWT_SECRET = 'gf307';
 

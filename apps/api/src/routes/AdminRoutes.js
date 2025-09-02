@@ -1,29 +1,55 @@
-// src/routes/AdminRoutes.js
+// apps/api/src/routes/AdminRoutes.js
 import { Router } from 'express';
-import UserController from '../controllers/UserController.js';
+// Importa as funções específicas do nosso controlador unificado
+import { 
+    getAllUsers, 
+    getUserById,
+    createUser,
+    updateUser,
+    deleteUser,
+    getAllEvaluators,
+    createEvaluator,
+    getAllInstituicoes,
+    getAllSinaisPropostos,
+    getAllSinaisOficiais,
+    getDashboardStats,
+    getProposalsByDay,
+    getRecentUsers,
+    getUsersByRole
+} from '../controllers/UserController.js';
 import { protect, isAdmin } from '../middlewares/authMiddleware.js';
 
 const router = Router();
 
-// Aplicamos os middlewares a todas as rotas neste ficheiro.
-// Qualquer requisição para /admin/* primeiro passará pelo 'protect', depois pelo 'isAdmin'.
+router.get('/stats', getDashboardStats);
+
+// Aplica a segurança a todas as rotas deste ficheiro
 router.use(protect, isAdmin);
 
-// --- Rotas de Gestão de Utilizadores ---
+// Rotas de Gestão de Utilizadores
+router.get('/users', getAllUsers);
+router.get('/users/:id', getUserById);
+router.post('/users', createUser);
+router.put('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
 
-// Rota para listar todos os utilizadores (já existente no UserController)
-router.get('/admin/users', UserController.getAllUsers);
+// Rotas de Gestão de Avaliadores
+router.get('/evaluators', getAllEvaluators);
+router.post('/evaluators', createEvaluator);
 
-// Rota para criar um novo utilizador (admin pode criar qualquer tipo)
-router.post('/admin/users', UserController.createUser);
+// Rota para Instituições (usada nos formulários do frontend)
+router.get('/instituicoes', getAllInstituicoes);
 
-// Rota para obter detalhes de um utilizador específico
-router.get('/admin/users/:id', UserController.getUserById);
+// Rotas para Consulta de Sinais
+router.get('/sinais-propostos', getAllSinaisPropostos);
+router.get('/sinais-oficiais', getAllSinaisOficiais);
 
-// Rota para atualizar um utilizador
-router.put('/admin/users/:id', UserController.updateUser);
+router.get('/recent-users', getRecentUsers);
+router.get('/proposals-by-day', getProposalsByDay);
+router.get('/users-by-role', getUsersByRole);
 
-// Rota para apagar um utilizador
-router.delete('/admin/users/:id', UserController.deleteUser);
+// Agrupa todas as rotas acima sob o prefixo /admin
+const adminRouter = Router();
+adminRouter.use('/admin', router);
 
-export default router;
+export default adminRouter;
