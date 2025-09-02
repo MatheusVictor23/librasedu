@@ -20,7 +20,11 @@ export const AuthProvider = ({ children }) => {
 
       if (userData.role === 'ADMIN') {
         navigate('/admin');
-      } else {
+      }
+      else if (userData.role === 'AVALIADOR') {
+        navigate('/avaliador/sinais');
+      }
+      else {
         navigate('/');
       }
     } catch (error) {

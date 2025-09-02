@@ -22,7 +22,40 @@ const createSinalProposto = async (req, res) => {
   }
 };
 
+
+
+
+const putSinalProposto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { avaliadorId, comentariosAvaliador, status } = req.body;
+
+    if (!avaliadorId || !status) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: "avaliadorId e status são obrigatórios"
+      });
+    }
+
+    const resultado = await SinalPropostoService.updateSinalProposto(id, {
+      avaliadorId,
+      comentariosAvaliador,
+      status
+    });
+
+    if (!resultado.sucesso) {
+      return res.status(500).json(resultado);
+    }
+
+    return res.json(resultado);
+  } catch (error) {
+    console.error("Erro no controller putSinalProposto:", error);
+    return res.status(500).json({ sucesso: false, mensagem: "Erro interno do servidor" });
+  }
+};
+
 export default {
   getAllSinaisPropostos,
   createSinalProposto,
+  putSinalProposto
 };

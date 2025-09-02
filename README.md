@@ -76,6 +76,14 @@ Após iniciar os containers pela primeira vez, o banco de dados estará no ar, m
 sudo docker-compose exec api npx prisma migrate dev --name init
 ```
 
+## 3.1 Popular o banco
+
+Para popular o banco de dados execute o seguinte comando:
+
+```bash
+docker compose exec api npm run seed
+```
+
 ### 4. Acessar a Aplicação
 Pronto! O ambiente completo está no ar.
 

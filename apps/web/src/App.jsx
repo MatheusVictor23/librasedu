@@ -5,6 +5,7 @@ import RegisterPageWrapper from './pages/RegisterPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import LoginPage from './pages/LoginPage';
+import AvaliadorPage from './pages/AvaliadorPage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Route path='/login' element={<LoginPage />} />
       <Route path='/admin' element={<AdminDashboardPage />} />
       <Route path='/admin/users' element={<AdminUsersPage />} />
+      <Route path='/avaliador/sinais' element={<AvaliadorPage />} />
     </Routes>
   );
 }

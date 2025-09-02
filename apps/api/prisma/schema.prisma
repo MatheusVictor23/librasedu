@@ -87,6 +87,13 @@ model Sinal {
   SinalFavorito SinalFavorito[]
 }
 
+
+enum StatusSinal {
+  PENDENTE
+  APROVADO
+  REPROVADO
+}
+
 model SinalProposto {
   id                   Int       @id @default(autoincrement())
   disciplinaId         Int
@@ -97,6 +104,7 @@ model SinalProposto {
   descricao            String
   videoUrl             String
   comentariosAvaliador String?
+  status               StatusSinal @default(PENDENTE)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt 
 
