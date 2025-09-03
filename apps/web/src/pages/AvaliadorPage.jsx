@@ -25,22 +25,24 @@ const SinaisAvaliador = () => {
     loadSinais();
   }, []);
 
-  const getYoutubeThumbnail = (url) => {
-    const videoId = url.split("v=")[1]?.split("&")[0];
-    return `https://img.youtube.com/vi/${videoId}/0.jpg`;
-  };
 
-    // Extrair o ID do vídeo
-  const getVideoId = (url) => {
-    try {
-      if (url.includes("youtu.be")) {
-        return url.split("/").pop();
-      }
-      return new URL(url).searchParams.get("v");
-    } catch {
-      return "";
-    }
-  };
+// Extrai o ID de qualquer URL do YouTube
+const getVideoId = (url) => {
+  try {
+    // Regex cobre youtube.com, youtu.be, shorts e URLs com parâmetros
+    const regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+};
+
+const getYoutubeThumbnail = (url, quality = "hqdefault") => {
+  const videoId = getVideoId(url);
+  if (!videoId) return "";
+  return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
+};
 
   const handleAction = async (status) => {
     if (!selectedSinal) return;
@@ -75,7 +77,7 @@ const SinaisAvaliador = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      PENDENTE: { color: 'bg-yellow-500', text: 'Pendente', icon: Clock },
+      PENDENTE: { color: 'bg-yellow-400', text: 'Pendente', icon: Clock },
       APROVADO: { color: 'bg-green-500', text: 'Aprovado', icon: CheckCircle },
       REPROVADO: { color: 'bg-red-500', text: 'Reprovado', icon: XCircle }
     };
@@ -106,7 +108,7 @@ const SinaisAvaliador = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-blue mx-auto mb-4"></div>
           <p className="text-gray-600">Carregando sinais propostos...</p>
         </div>
       </div>
@@ -122,10 +124,8 @@ const SinaisAvaliador = () => {
           <div className="flex items-center justify-between">
             {sidebarOpen && (
               <div className="flex items-center space-x-3">
-                <div className="text-2xl">✋</div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-800">LibrasAdmin</h2>
-                  <p className="text-xs text-gray-500">Avaliador</p>
+                  <h2 className="text-lg font-bold text-gray-800">Avaliador</h2>
                 </div>
               </div>
             )}
@@ -149,7 +149,7 @@ const SinaisAvaliador = () => {
                     href="#"
                     className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
                       item.active 
-                        ? 'bg-green-100 text-green-700 border-l-4 border-green-600' 
+                        ? 'bg-blue-100 text-brand-blue border-l-4 border-brand-blue' 
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
@@ -165,7 +165,7 @@ const SinaisAvaliador = () => {
         {/* User Profile */}
         <div className="p-4 border-t border-gray-200">
           <div className={`flex items-center ${sidebarOpen ? 'space-x-3' : 'justify-center'}`}>
-            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-brand-blue rounded-full flex items-center justify-center">
               <User size={16} className="text-white" />
             </div>
             {sidebarOpen && (
@@ -187,12 +187,12 @@ const SinaisAvaliador = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg">
+        <header className="bg-brand-blue text-white shadow-lg">
           <div className="px-6 py-4">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold">Avaliação de Sinais</h1>
-                <p className="text-green-100 text-sm">Sistema de Aprovação de Libras</p>
+                <p className="text-white text-sm">Sistema de Aprovação de Libras</p>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
@@ -214,7 +214,7 @@ const SinaisAvaliador = () => {
                 onClick={() => setFilter(status)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   filter === status 
-                    ? 'bg-green-600 text-white' 
+                    ? 'bg-brand-blue text-white' 
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm'
                 }`}
               >
@@ -306,7 +306,7 @@ const SinaisAvaliador = () => {
                 />
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Descrição</h3>
-                  <p className="text-gray-700">{selectedSinal.descricao}</p>
+                  <p className="text-gray-700 text-justify">{selectedSinal.descricao}</p>
                 </div>
               </div>
 
@@ -315,15 +315,19 @@ const SinaisAvaliador = () => {
                 {/* Informações do Sinal */}
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center space-x-2">
-                    <BookOpen className="text-green-600" size={18} />
+                    <BookOpen className="text-brand-blue" size={18} />
                     <div>
                       <p className="font-medium text-gray-800">Área do Conhecimento</p>
-                      <p className="text-gray-600 text-sm">{selectedSinal.disciplina?.curso?.areasConhecimento?.nome || "Não informado"}</p>
+                      {selectedSinal.disciplina?.curso?.areasConhecimento?.length > 1 ? (
+                        <p className="text-gray-600 text-sm">{selectedSinal.disciplina?.curso?.areasConhecimento?.map((area) => area.nome).join(", ") || "Não informado"}</p>
+                      ) : (
+                        <p className="text-gray-600 text-sm">{selectedSinal.disciplina?.curso?.areasConhecimento?.[0].nome || "Não informado"}</p>
+                      )}
                     </div>
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <GraduationCap className="text-green-600" size={18} />
+                    <GraduationCap className="text-brand-blue" size={18} />
                     <div>
                       <p className="font-medium text-gray-800">Curso</p>
                       <p className="text-gray-600 text-sm">{selectedSinal.disciplina?.curso?.nome || "Não informado"}</p>
@@ -331,7 +335,7 @@ const SinaisAvaliador = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <BookOpen className="text-green-600" size={18} />
+                    <BookOpen className="text-brand-blue" size={18} />
                     <div>
                       <p className="font-medium text-gray-800">Disciplina</p>
                       <p className="text-gray-600 text-sm">{selectedSinal.disciplina?.nome || "Não informado"}</p>
@@ -339,7 +343,7 @@ const SinaisAvaliador = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <User className="text-green-600" size={18} />
+                    <User className="text-brand-blue" size={18} />
                     <div>
                       <p className="font-medium text-gray-800">Proposto por</p>
                       <p className="text-gray-600 text-sm">{selectedSinal.proposer?.nome || "Desconhecido"}</p>
@@ -347,7 +351,7 @@ const SinaisAvaliador = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <Building className="text-green-600" size={18} />
+                    <Building className="text-brand-blue" size={18} />
                     <div>
                       <p className="font-medium text-gray-800">Instituição</p>
                       <p className="text-gray-600 text-sm">{selectedSinal.proposer?.instituicao?.nome || "Não informado"}</p>
@@ -355,49 +359,47 @@ const SinaisAvaliador = () => {
                   </div>
                 </div>
 
-                {/* Campo comentário */}
-                {avaliado == false && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Comentários da Avaliação
-                    </label>
-                    <textarea
-                      placeholder="Adicione comentários..."
-                      value={comentario}
-                      onChange={(e) => setComentario(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-3 h-24 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                    />
-                  </div>
-                )}
-
-
                 {/* Comentários Anteriores */}
                 {selectedSinal.comentariosAvaliador && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 mb-2">Comentários do avaliador</h4>
+                    <h4 className="font-medium text-blue-800 mb-2">Comentário do avaliador</h4>
                     <p className="text-blue-700 text-sm">{selectedSinal.comentariosAvaliador}</p>
                   </div>
                 )}
 
-                {/* Botões de ação */}
+                {/* Campo comentário */}
                 {avaliado == false && (
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => handleAction("APROVADO")}
-                      className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                    >
-                      <CheckCircle size={18} />
-                      <span>Aprovar</span>
-                    </button>
-                    <button
-                      onClick={() => handleAction("REPROVADO")}
-                      className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                    >
-                      <XCircle size={18} />
-                      <span>Rejeitar</span>
-                    </button>
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Comentários da Avaliação
+                      </label>
+                      <textarea
+                        placeholder="Adicione comentários..."
+                        value={comentario}
+                        onChange={(e) => setComentario(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg p-3 h-24 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                      />
+                    </div>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => handleAction("APROVADO")}
+                        className="flex-1 bg-brand-blue text-white py-3 px-4 rounded-lg font-medium hover:bg-brand-blue-dark transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <CheckCircle size={18} />
+                        <span>Aprovar</span>
+                      </button>
+                      <button
+                        onClick={() => handleAction("REPROVADO")}
+                        className="flex-1 bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <XCircle size={18} />
+                        <span>Rejeitar</span>
+                      </button>
+                    </div>
+                  </>
                 )}
+
 
               </div>
             </div>
