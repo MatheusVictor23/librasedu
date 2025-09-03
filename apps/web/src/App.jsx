@@ -14,12 +14,13 @@ import AdminSinaisPage from './pages/AdminSinaisPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import ApprovedProposalsPage from './pages/ApprovedProposalsPage';
 import RejectedProposalsPage from './pages/RejectedProposalsPage';
+import SubmitSignPage from './pages/SubmitSignPage';
 
 // Importação da Página do Painel do Avaliador
 import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
 
 // Importação dos Componentes de Proteção de Rotas
-import { ProtectedRoute, EvaluatorRoute } from './components/ProtectedRoute';
+import { ProtectedRoute, EvaluatorRoute, AuthenticatedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
       <Route path='/evaluator/dashboard' element={<EvaluatorRoute><EvaluatorDashboardPage /></EvaluatorRoute>} />
       <Route path='/evaluator/approved' element={<EvaluatorRoute><ApprovedProposalsPage /></EvaluatorRoute>} />
       <Route path='/evaluator/rejected' element={<EvaluatorRoute><RejectedProposalsPage /></EvaluatorRoute>} />
+      <Route path="/propor-sinal" element={<AuthenticatedRoute><SubmitSignPage /></AuthenticatedRoute>} />
       
     </Routes>
   );

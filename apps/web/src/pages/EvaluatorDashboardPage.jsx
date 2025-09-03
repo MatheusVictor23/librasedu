@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import EvaluatorLayout from '../layouts/EvaluatorLayout';
 import api from '../api/axiosConfig';
 import { ArrowRight } from 'lucide-react';
-import EvaluationModal from '../components/EvaluationModal'; 
+import EvaluationModal from '../components/EvaluationModal';
 
 const ProposalCard = ({ proposal, onEvaluate }) => (
   <div className="bg-white rounded-lg shadow overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
@@ -29,7 +29,6 @@ const EvaluatorDashboardPage = () => {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  // 2. Adicionar estado para controlar o modal
   const [selectedProposal, setSelectedProposal] = useState(null);
 
   const fetchPendingProposals = async () => {
@@ -49,7 +48,6 @@ const EvaluatorDashboardPage = () => {
     fetchPendingProposals();
   }, []);
 
-  // 3. Funções para abrir, fechar e salvar
   const handleEvaluateClick = (proposal) => {
     setSelectedProposal(proposal);
   };
@@ -59,13 +57,12 @@ const EvaluatorDashboardPage = () => {
   };
 
   const handleSaveEvaluation = () => {
-    setSelectedProposal(null); // Fecha o modal
-    fetchPendingProposals();    // Atualiza a lista de propostas
+    setSelectedProposal(null);
+    fetchPendingProposals();
   };
   
   return (
     <EvaluatorLayout>
-      {/* 4. Renderizar o modal condicionalmente */}
       {selectedProposal && (
         <EvaluationModal 
           proposal={selectedProposal} 

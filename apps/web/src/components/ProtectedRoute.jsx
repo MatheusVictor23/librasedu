@@ -33,3 +33,17 @@ export const EvaluatorRoute = ({ children }) => {
 
   return children;
 };
+
+export const AuthenticatedRoute = ({ children }) => {
+  const { token, loading } = useAuth();
+
+  if (loading) {
+    return null; // Ou um spinner
+  }
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
