@@ -1,4 +1,3 @@
-// apps/api/src/controllers/UserController.js
 import UserService from '../services/UserService.js';
 import InstituicaoService from '../services/InstituicaoService.js';
 import SinalPropostoService from '../services/SinalPropostoService.js';
@@ -82,12 +81,12 @@ export const getAllInstituicoes = async (req, res) => {
 };
 
 export const getAllSinaisPropostos = async (req, res) => {
-    try {
-        const propostos = await SinalPropostoService.getAll();
-        res.json(propostos);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar propostas de sinais.', details: error.message });
-    }
+  try {
+    const propostos = await SinalPropostoService.getPendingProposals();
+    res.json(propostos);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar propostas de sinais.', details: error.message });
+  }
 };
 
 export const getAllSinaisOficiais = async (req, res) => {

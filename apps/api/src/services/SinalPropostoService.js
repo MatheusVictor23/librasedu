@@ -52,16 +52,14 @@ const getProposalsByDay = async (days = 7) => {
     },
   });
 
-  // Formata os dados para o gráfico
   const formattedData = proposals.map(item => ({
-    date: new Date(item.createdAt).toISOString().split('T')[0], // Formato AAAA-MM-DD
+    date: new Date(item.createdAt).toISOString().split('T')[0], 
     count: item._count.id,
   }));
 
   return formattedData;
 };
 
-// NOVA FUNÇÃO para buscar propostas pendentes
 const getPendingProposals = async () => {
   return prisma.sinalProposto.findMany({
     where: {
@@ -77,9 +75,7 @@ const getPendingProposals = async () => {
   });
 };
 
-// NOVA FUNÇÃO para um avaliador submeter a sua decisão
 const submitEvaluation = async (proposalId, evaluatorId, status, comentarios) => {
-  // 1. Atualiza a proposta com o resultado da avaliação
   const updatedProposal = await prisma.sinalProposto.update({
     where: { id: parseInt(proposalId) },
     data: {
@@ -89,7 +85,6 @@ const submitEvaluation = async (proposalId, evaluatorId, status, comentarios) =>
     },
   });
 
-  // 2. Se for aprovado, cria o Sinal oficial
   if (status === 'APROVADO') {
     await prisma.sinal.create({
       data: {
@@ -107,7 +102,7 @@ const submitEvaluation = async (proposalId, evaluatorId, status, comentarios) =>
 
 const getProposalsByStatus = async (status) => {
   return prisma.sinalProposto.findMany({
-    where: { status }, // 'APROVADO' ou 'REJEITADO'
+    where: { status }, 
     include: {
       proposer: { select: { nome: true } },
       avaliador: { select: { nome: true } },

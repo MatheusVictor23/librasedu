@@ -2,7 +2,7 @@
 
 Este diretório contém a API backend do projeto LIBRAS-EDU. É uma API RESTful construída com Node.js e Express, responsável por toda a lógica de negócios, gestão de dados e comunicação com o banco de dados PostgreSQL.
 
-A arquitetura do projeto segue um padrão **MVC com uma camada de Serviços** (`Rotas` -> `Controladores` -> `Serviços` -> `Modelo`), o que garante um código organizado, desacoplado e escalável.
+A arquitetura do projeto segue um padrão em camadas (`Rotas` -> `Middlewares` -> `Controladores` -> `Serviços` -> `Modelo`), o que garante um código organizado, desacoplado e escalável.
 
 ---
 
@@ -31,28 +31,40 @@ A arquitetura do projeto segue um padrão **MVC com uma camada de Serviços** (`
 
 ---
 
-### 🔌 Endpoints da API (Principais)
+### 🔌 Endpoints da API
 
-A API base roda em `http://localhost:3000/api`.
+A base de todos os endpoints é `http://localhost:3000/api`.
 
-- **Autenticação (`/auth`)**
-  - `POST /login`: Autentica um utilizador e retorna um token JWT.
+#### Autenticação (Público)
+* `POST /auth/login`: Autentica um utilizador com email e senha, retornando um token JWT e os dados do utilizador.
 
-- **Recursos Públicos (`/users`, `/instituicoes`, etc.)**
-  - `POST /users`: Regista um novo utilizador (com senha hasheada).
-  - `GET, POST /instituicoes`
-  - `GET, POST /areas-conhecimento`
-  - `GET, POST /cursos`
-  - `GET, POST /disciplinas`
-  - `GET, POST /sinais-propostos` (Para submissão de novos sinais)
-  - `GET, POST /sinais` (Para os sinais já aprovados no glossário)
+#### Recursos Públicos e Registo
+* `POST /users`: Regista um novo utilizador no sistema.
+* `GET, POST /instituicoes`: Lista ou cria novas instituições.
+* `GET, POST /disciplinas`: Lista ou cria novas disciplinas.
+* `GET /cursos`, `GET /areas-conhecimento`, `GET /sinais`.
 
-- **Recursos de Administração (`/admin`) - *Protegidos***
-  - `GET /admin/users`: Lista todos os utilizadores do sistema.
-  - `POST /admin/users`: Cria um novo utilizador (função de admin).
-  - `GET /admin/users/:id`: Busca um utilizador específico.
-  - `PUT /admin/users/:id`: Atualiza um utilizador.
-  - `DELETE /admin/users/:id`: Apaga um utilizador.
+#### Submissão de Sinais (Exige Autenticação)
+* `POST /sinais-propostos`: Submete uma nova proposta de sinal. O `proposerId` é obtido automaticamente do token do utilizador logado.
+
+#### Painel do Avaliador (Exige `AVALIADOR` ou `ADMIN`)
+* `GET /evaluator/proposals/pending`: Retorna uma lista de todas as propostas com status `PENDENTE`.
+* `GET /evaluator/proposals/aprovado`: Retorna uma lista de todas as propostas com status `APROVADO`.
+* `GET /evaluator/proposals/rejeitado`: Retorna uma lista de todas as propostas com status `REJEITADO`.
+* `POST /evaluator/proposals/:id/evaluate`: Submete uma avaliação para uma proposta, alterando o seu status e, se aprovada, criando um novo `Sinal` oficial.
+
+#### Painel de Administração (Exige `ADMIN`)
+* `GET /admin/stats`: Retorna estatísticas agregadas para o dashboard.
+* `GET /admin/recent-users`: Retorna os últimos utilizadores registados.
+* `GET /admin/proposals-by-day`: Retorna a contagem de propostas dos últimos 7 dias.
+* `GET /admin/users-by-role`: Retorna a contagem de utilizadores agrupados por perfil.
+* `GET /admin/users`: Retorna uma lista de todos os utilizadores.
+* `PUT /admin/users/:id`: Atualiza um utilizador específico.
+* `DELETE /admin/users/:id`: Apaga um utilizador específico.
+* `GET /admin/evaluators`: Retorna uma lista de todos os utilizadores com o perfil `AVALIADOR`.
+* `POST /admin/evaluators`: Cria um novo utilizador com o perfil `AVALIADOR`.
+* `GET /admin/sinais-propostos`: Retorna uma lista das propostas pendentes para consulta.
+* `GET /admin/sinais-oficiais`: Retorna uma lista de todos os sinais aprovados.
 
 ---
 
@@ -60,6 +72,6 @@ A API base roda em `http://localhost:3000/api`.
 
 O backend é gerido pelo ficheiro `docker-compose.yml` na raiz do projeto. Consulte o `README.md` principal para as instruções completas de como iniciar todo o ambiente.
 
-Para executar comandos específicos (como migrações), use `docker-compose exec`:
+Para executar comandos específicos do Prisma (como migrações), use `docker-compose exec`:
 ```bash
-sudo docker-compose exec api npx prisma migrate dev
+sudo docker-compose exec api npx prisma migrate dev --name "nome-da-migracao"

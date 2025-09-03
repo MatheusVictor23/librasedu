@@ -10,12 +10,12 @@ const getAll = async () => {
 };
 
 const create = async (data) => {
-  const { nome, cargaHoraria, idCurso } = data;
+  const { nome, cargaHoraria, idCurso = 1 } = data; 
 
   return prisma.disciplina.create({
     data: {
       nome,
-      cargaHoraria,
+      cargaHoraria, 
       curso: {
         connect: {
           id: parseInt(idCurso),

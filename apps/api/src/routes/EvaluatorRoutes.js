@@ -1,13 +1,10 @@
-// apps/api/src/routes/EvaluatorRoutes.js
 import { Router } from 'express';
 import SinalPropostoService from '../services/SinalPropostoService.js';
 import { protect, isEvaluator } from '../middlewares/authMiddleware.js';
 
 const router = Router();
-// Aplica a segurança a todas as rotas de avaliador
 router.use('/evaluator', protect, isEvaluator);
 
-// Rota para buscar propostas pendentes
 router.get('/evaluator/proposals/pending', async (req, res) => {
     try {
         const proposals = await SinalPropostoService.getPendingProposals();
@@ -17,12 +14,11 @@ router.get('/evaluator/proposals/pending', async (req, res) => {
     }
 });
 
-// Rota para submeter uma avaliação
 router.post('/evaluator/proposals/:id/evaluate', async (req, res) => {
     try {
         const { id } = req.params;
         const { status, comentarios } = req.body;
-        const evaluatorId = req.user.id; // ID vem do utilizador logado (via middleware 'protect')
+        const evaluatorId = req.user.id; 
 
         if (!status || (status !== 'APROVADO' && status !== 'REJEITADO')) {
             return res.status(400).json({ error: 'O campo status (APROVADO ou REJEITADO) é obrigatório.' });

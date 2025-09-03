@@ -44,8 +44,6 @@ const remove = async (id) => {
   });
 };
 
-
-// ADICIONE ESTAS DUAS NOVAS FUNÇÕES
 const getAllEvaluators = async () => {
   return prisma.usuario.findMany({
     where: {
@@ -71,7 +69,6 @@ const createEvaluator = async (evaluatorData) => {
 };
 
 const getDashboardStats = async () => {
-  // Executa todas as contagens em paralelo para mais eficiência
   const [totalUsers, totalEvaluators, totalProposals, totalOfficialSignals] = await prisma.$transaction([
     prisma.usuario.count(),
     prisma.usuario.count({ where: { role: 'AVALIADOR' } }),
@@ -106,7 +103,6 @@ const getUsersByRole = async () => {
       role: true,
     },
   });
-  // O resultado será algo como: [{ role: 'USER', _count: { role: 10 } }, ...]
   return roleCounts;
 };
 

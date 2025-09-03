@@ -1,4 +1,3 @@
-// src/controllers/AuthController.js
 import AuthService from '../services/AuthService.js';
 
 const loginController = async (req, res) => {
@@ -12,7 +11,6 @@ const loginController = async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    // Em caso de "Credenciais inválidas" ou outro erro
     res.status(401).json({ error: error.message });
   }
 };
