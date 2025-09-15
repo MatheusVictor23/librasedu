@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 // Importação das Páginas Públicas
 import HomePageWrapper from './pages/HomePage';
 import RegisterPageWrapper from './pages/RegisterPage';
-import LoginPage from './pages/LoginPage';
+// import LoginPage from './pages/LoginPage';
 
 // Importação das Páginas do Painel de Administração
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -21,6 +21,8 @@ import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
 
 // Importação dos Componentes de Proteção de Rotas
 import { ProtectedRoute, EvaluatorRoute, AuthenticatedRoute } from './components/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
+import AvaliadorPage from './pages/AvaliadorPage';
 
 function App() {
   return (
@@ -46,6 +48,9 @@ function App() {
       <Route path='/evaluator/rejected' element={<EvaluatorRoute><RejectedProposalsPage /></EvaluatorRoute>} />
       <Route path="/propor-sinal" element={<AuthenticatedRoute><SubmitSignPage /></AuthenticatedRoute>} />
       
+      <Route path='/admin' element={<AdminDashboardPage />} />
+      <Route path='/admin/users' element={<AdminUsersPage />} />
+      <Route path='/avaliador/sinais' element={<AvaliadorPage />} />
     </Routes>
   );
 }

@@ -43,13 +43,7 @@ const LoginPage = () => {
 
 
 
-
-
-
-
   //função de validação dos campos do formulário
-
-
   const validateForm = () => {
 
     const newErrors = {};

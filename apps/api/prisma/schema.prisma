@@ -87,10 +87,11 @@ model Sinal {
   SinalFavorito SinalFavorito[]
 }
 
-enum PropostaStatus {
+
+enum StatusSinal {
   PENDENTE
   APROVADO
-  REJEITADO
+  REPROVADO
 }
 
 model SinalProposto {
@@ -103,8 +104,7 @@ model SinalProposto {
   descricao            String
   videoUrl             String
   comentariosAvaliador String?
-  // ADICIONE ESTA LINHA
-  status               PropostaStatus @default(PENDENTE)
+  status               StatusSinal @default(PENDENTE)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt 
 

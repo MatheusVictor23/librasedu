@@ -5,10 +5,33 @@ const getAll = async () => {
     include: {
       disciplina: {
         include: {
-          curso: true, 
+          curso: {
+            select: {
+              id: true,
+              nome: true,
+              areasConhecimento: {
+                select: {
+                  id: true,
+                  nome: true,
+                }
+              }
+            }
+          }, 
         }
       },
-      proposer: true,
+      proposer: {
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          instituicao: {
+            select: {
+              id: true,
+              nome: true,  
+            }
+          }
+        }
+      },
       avaliador: true,
     },
   });
@@ -27,7 +50,7 @@ const create = async (data) => {
       },
       proposer: {
         connect: { id: parseInt(proposerId) }
-      }
+      },
     },
   });
 };
@@ -112,6 +135,29 @@ const getProposalsByStatus = async (status) => {
   });
 };
 
+
+const updateSinalProposto = async (id, data) => {
+  try {
+    // Atualiza os campos do sinal proposto
+    const sinal = await prisma.sinalProposto.update({
+      where: { id: Number(id) },
+      data: {
+        avaliadorId: data.avaliadorId,
+        comentariosAvaliador: data.comentariosAvaliador,
+        updatedAt: new Date(),
+        // se quiser salvar status, pode incluir aqui
+        status: data.status || 'PENDENTE'
+      }
+    });
+
+    return { sucesso: true, dados: sinal };
+  } catch (error) {
+    console.error("Erro no service updateSinalProposto:", error);
+    return { sucesso: false, mensagem: "Erro ao atualizar sinal proposto" };
+  }
+};
+
+
 export default {
   getAll,
   create,
@@ -119,4 +165,5 @@ export default {
   getPendingProposals,
   submitEvaluation,
   getProposalsByStatus,
+  updateSinalProposto,
 };
