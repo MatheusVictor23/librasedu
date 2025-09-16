@@ -4,6 +4,7 @@ import EvaluatorLayout from '../layouts/EvaluatorLayout';
 import api from '../api/axiosConfig';
 import { ArrowRight } from 'lucide-react';
 import EvaluationModal from '../components/EvaluationModal';
+import Pagination from '../components/Pagination';
 
 const ProposalCard = ({ proposal, onEvaluate }) => (
   <div className="bg-white rounded-lg shadow overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
@@ -31,11 +32,17 @@ const EvaluatorDashboardPage = () => {
   const [error, setError] = useState('');
   const [selectedProposal, setSelectedProposal] = useState(null);
 
-  const fetchPendingProposals = async () => {
+  // estados para paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  let limit = 2;
+
+  const fetchPendingProposals = async (page) => {
     setLoading(true);
     try {
-      const response = await api.get('/evaluator/proposals/pending');
-      setProposals(response.data);
+      const response = await api.get(`/evaluator/proposals/pending?page=${page}&limit=${limit}`);
+      setProposals(response.data.proposals);
+      setTotalPages(response.data.totalPages);
     } catch (err) {
       setError('Não foi possível carregar as propostas.');
       console.error(err);
@@ -45,8 +52,8 @@ const EvaluatorDashboardPage = () => {
   };
 
   useEffect(() => {
-    fetchPendingProposals();
-  }, []);
+    fetchPendingProposals(currentPage);
+  }, [currentPage]);
 
   const handleEvaluateClick = (proposal) => {
     setSelectedProposal(proposal);
@@ -58,7 +65,12 @@ const EvaluatorDashboardPage = () => {
 
   const handleSaveEvaluation = () => {
     setSelectedProposal(null);
-    fetchPendingProposals();
+    // recarrega os dados da página atual
+    if (proposals.length === 1 && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    } else {
+      fetchPendingProposals(currentPage);
+    }
   };
   
   return (
@@ -79,15 +91,23 @@ const EvaluatorDashboardPage = () => {
       {error && <p className="text-red-500">{error}</p>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {proposals.length > 0 ? (
-            proposals.map(proposal => (
-              <ProposalCard key={proposal.id} proposal={proposal} onEvaluate={handleEvaluateClick} />
-            ))
-          ) : (
-            <p className="col-span-full text-center text-gray-500 py-10">Não há propostas pendentes para avaliação no momento.</p>
-          )}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {proposals.length > 0 ? (
+              proposals.map(proposal => (
+                <ProposalCard key={proposal.id} proposal={proposal} onEvaluate={handleEvaluateClick} />
+              ))
+            ) : (
+              <p className="col-span-full text-center text-gray-500 py-10">Não há propostas pendentes para avaliação no momento.</p>
+            )}
+          </div>
+
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
     </EvaluatorLayout>
   );

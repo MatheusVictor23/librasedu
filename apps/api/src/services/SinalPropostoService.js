@@ -83,19 +83,34 @@ const getProposalsByDay = async (days = 7) => {
   return formattedData;
 };
 
-const getPendingProposals = async () => {
-  return prisma.sinalProposto.findMany({
-    where: {
-      status: 'PENDENTE',
-    },
-    include: {
-      proposer: { select: { nome: true } },
-      disciplina: { select: { nome: true } },
-    },
-    orderBy: {
-      createdAt: 'asc',
-    },
-  });
+const getPendingProposals = async (page, limit) => {
+  const skip = (page - 1) * limit;
+
+  const [proposals, totalProposals] = await prisma.$transaction([
+    prisma.sinalProposto.findMany({
+      where: { status: 'PENDENTE' },
+      skip: skip,
+      take: limit,
+      include: {
+        proposer: { select: { nome: true } },
+        disciplina: { select: { nome: true } },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    }),
+    prisma.sinalProposto.count({
+      where: { status: 'PENDENTE' },
+    }),
+  ]);
+  
+  const totalPages = Math.ceil(totalProposals / limit);
+
+  return {
+    proposals,
+    totalPages,
+    currentPage: page,
+  };
 };
 
 const submitEvaluation = async (proposalId, evaluatorId, status, comentarios) => {

@@ -7,7 +7,10 @@ router.use('/evaluator', protect, isEvaluator);
 
 router.get('/evaluator/proposals/pending', async (req, res) => {
     try {
-        const proposals = await SinalPropostoService.getPendingProposals();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 3;
+
+        const proposals = await SinalPropostoService.getPendingProposals(page, limit);
         res.json(proposals);
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar propostas pendentes.' });
