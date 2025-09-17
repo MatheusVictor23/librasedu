@@ -131,10 +131,10 @@ const LoginPage = () => {
     return (
 
       <>
-        <section className="bg-brand-background-light w-full min-h-screen flex flex-col md:flex-row">
+        <section className="bg-brand-background-light w-full min-h-screen flex flex-col lg:flex-row justify-center items-center">
 
           {/* lado esquerdo - imagens e manchas */}
-          <div className="relative w-full md:w-1/2 h-64 md:h-screen overflow-hidden hidden md:block">
+          <div className="relative w-full md:w-1/2 h-64 md:h-screen overflow-hidden hidden lg:block">
 
             {/* mancha azul 1 */}
             <div className="absolute top-10 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
@@ -149,18 +149,18 @@ const LoginPage = () => {
             <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-35"></div>
 
             {/* imagem sobre o blur */}
-            <img src={taipiriImg} alt="Portal Tapiri" className="relative z-50 left-20" />
+            <img src={taipiriImg} alt="Portal Tapiri" className="relative z-50 left-20 mt-6" />
 
           </div>
 
           {/* lado direito - formulário */}
-          <div className="w-full md:w-1/2 flex items-center justify-start p-8 md:p-12">
+          <div className="w-full flex md:items-center sm:justify-center p-4 md:p-12 lg:w-2/3 xl:justify-start xl:w-1/2">
 
-            <div className="w-full max-w-[80%] bg-white px-8 md:px-12 py-8 md:ml-2 rounded-3xl shadow-2xl shadow-slate-400">
+            <div className="w-full sm:max-w-[80%] bg-white px-4 md:px-8 lg:px-12 py-8 md:ml-2 rounded-3xl shadow-2xl shadow-slate-400">
 
               <div>
 
-                <h3 className="text-lg md:text-4xl font-bold leading-tight text-brand-blue">Login</h3>
+                <h3 className="text-3xl md:text-4xl font-bold leading-tight text-brand-blue">Login</h3>
 
                 <p className="mt-2 mb-6 text-base text-brand-text-secondary max-w-xl md:mx-0 mx-auto">
                   Entre com o seu email e senha para acessar sua conta
@@ -283,7 +283,7 @@ const LoginPage = () => {
               <div className="flex justify-center">
 
                 <p className="mb-6 text-sm text-brand-text-secondary max-w-xl md:mx-0 mx-auto">
-                  Não tem uma conta? <span className="text-brand-blue underline"><Link to={"/register"}>Cadastre-se agora</Link></span>
+                  Não tem uma conta? <span className="text-brand-blue hover:underline"><Link to={"/register"}>Cadastre-se agora</Link></span>
                 </p>
 
               </div>
