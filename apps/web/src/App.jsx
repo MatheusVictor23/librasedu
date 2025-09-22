@@ -2,9 +2,14 @@
 import { Routes, Route } from 'react-router-dom';
 
 // Importação das Páginas Públicas
-import HomePageWrapper from './pages/HomePage';
+import HomePage from './pages/HomePage'; // ATUALIZADO
 import RegisterPageWrapper from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+
+// Importação da Página do Dashboard do Usuário
+import UserDashboardPage from './pages/UserDashboardPage'; // ATUALIZADO
+import SignsPage from './pages/SignsPage'; 
+import ProfilePage from './pages/ProfilePage';
 
 // Importação das Páginas do Painel de Administração
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -26,13 +31,18 @@ function App() {
   return (
     <Routes>
       {/* --- Rotas Públicas --- */}
-      <Route path='/' element={<HomePageWrapper />} />
+      <Route path='/' element={<HomePage />} /> {/* ATUALIZADO */}
       <Route path='/register' element={<RegisterPageWrapper />} />
       <Route path='/login' element={<LoginPage />} />
       
+      {/* --- Rotas do Usuário Autenticado --- */}
+      <Route path='/dashboard' element={<AuthenticatedRoute><UserDashboardPage /></AuthenticatedRoute>} /> {/* ATUALIZADO */}
+      <Route path="/propor-sinal" element={<AuthenticatedRoute><SubmitSignPage /></AuthenticatedRoute>} />
+      <Route path="/sinais" element={<AuthenticatedRoute><SignsPage /></AuthenticatedRoute>} /> {/* 2. Adicione a nova rota aqui */}
+      <Route path="/perfil" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
+
 
       {/* --- Rotas de Administração Protegidas --- */}
-      {/* Apenas utilizadores com a role 'ADMIN' podem aceder a estas rotas */}
       <Route path='/admin' element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
       <Route path='/admin/users' element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
       <Route path='/admin/evaluators' element={<ProtectedRoute><AdminEvaluatorsPage /></ProtectedRoute>} />
@@ -40,11 +50,9 @@ function App() {
       <Route path='/admin/settings' element={<ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
 
       {/* --- Rota do Avaliador Protegida --- */}
-      {/* Utilizadores com a role 'AVALIADOR' ou 'ADMIN' podem aceder a esta rota */}
       <Route path='/evaluator/dashboard' element={<EvaluatorRoute><EvaluatorDashboardPage /></EvaluatorRoute>} />
       <Route path='/evaluator/approved' element={<EvaluatorRoute><ApprovedProposalsPage /></EvaluatorRoute>} />
       <Route path='/evaluator/rejected' element={<EvaluatorRoute><RejectedProposalsPage /></EvaluatorRoute>} />
-      <Route path="/propor-sinal" element={<AuthenticatedRoute><SubmitSignPage /></AuthenticatedRoute>} />
       
     </Routes>
   );
