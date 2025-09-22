@@ -8,11 +8,9 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  // 1. Adicionar um estado de 'loading'
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 2. Usar useEffect para verificar o localStorage apenas uma vez, quando o app carrega
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
@@ -21,7 +19,6 @@ export const AuthProvider = ({ children }) => {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
-    // Independentemente de encontrar ou não, a verificação inicial terminou
     setLoading(false);
   }, []);
 
@@ -40,7 +37,8 @@ export const AuthProvider = ({ children }) => {
       } else if (userData.role === 'AVALIADOR') {
         navigate('/evaluator/dashboard');
       } else {
-        navigate('/');
+        // ATUALIZAÇÃO AQUI: Redireciona o usuário comum para o dashboard
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Falha no login', error);
@@ -56,10 +54,8 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
-  // 3. Passar o estado 'loading' para o provider
   const value = { token, user, loading, loginAction, logoutAction };
 
-  // 4. Não renderizar nada enquanto estiver a carregar o estado inicial
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
