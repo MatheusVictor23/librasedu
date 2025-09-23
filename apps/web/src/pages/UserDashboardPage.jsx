@@ -1,24 +1,68 @@
-// src/pages/UserDashboardPage.jsx
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import TabNavigation from '../components/TabNavigation';
 import SignCard from '../components/SignCard';
 import { useAuth } from '../context/AuthContext';
 import { Search } from 'lucide-react';
+import api from '../api/axiosConfig';
 
 const UserDashboardPage = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('alta');
+  
+  // Estados para os diferentes tipos de sinais
+  const [trendingSigns, setTrendingSigns] = useState([]);
+  const [recentSigns, setRecentSigns] = useState([]);
+  const [recommendedSigns, setRecommendedSigns] = useState([]);
+  
+  // Estados para a busca
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const mockSigns = Array(6).fill(null).map((_, index) => ({
-    id: index + 1,
-    title: "Banco de dados",
-    likes: Math.floor(Math.random() * 100),
-    saves: Math.floor(Math.random() * 50),
-    isLiked: Math.random() > 0.5,
-    isSaved: Math.random() > 0.5
-  }));
+  const [activeTab, setActiveTab] = useState('alta');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSinais = async () => {
+      try {
+        setLoading(true);
+        const [trendingRes, recentRes, recommendedRes] = await Promise.all([
+          api.get('/sinais/trending'),
+          api.get('/sinais/recent'),
+          api.get('/sinais/recommended')
+        ]);
+        setTrendingSigns(trendingRes.data);
+        setRecentSigns(recentRes.data);
+        setRecommendedSigns(recommendedRes.data);
+      } catch (error) {
+        console.error("Erro ao buscar sinais:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSinais();
+  }, []);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+    }
+    setIsSearching(true);
+    setLoading(true);
+    try {
+        const response = await api.get(`/sinais?searchTerm=${searchTerm}`);
+        setSearchResults(response.data);
+    } catch (error) {
+        console.error("Erro ao buscar:", error);
+        setSearchResults([]);
+    } finally {
+        setLoading(false);
+    }
+  };
+
 
   const tabs = [
     { id: 'alta', label: 'Sinais em alta' },
@@ -26,7 +70,25 @@ const UserDashboardPage = () => {
     { id: 'recomendados', label: 'Recomendados' }
   ];
 
-  // Conteúdo da parte de cima (fundo claro)
+  const renderSinais = () => {
+    if (loading) return <p className="text-white text-center">A carregar sinais...</p>;
+    
+    let sinaisToShow = [];
+    if (activeTab === 'alta') sinaisToShow = trendingSigns;
+    else if (activeTab === 'recentes') sinaisToShow = recentSigns;
+    else sinaisToShow = recommendedSigns;
+
+    if (sinaisToShow.length === 0) return <p className="text-white text-center">Nenhum sinal encontrado.</p>;
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sinaisToShow.map((sign) => (
+          <SignCard key={`${activeTab}-${sign.id}`} sign={sign} />
+        ))}
+      </div>
+    );
+  };
+
   const heroContent = (
     <div className="container mx-auto max-w-6xl px-6 py-12">
       <div className="text-center">
@@ -43,43 +105,59 @@ const UserDashboardPage = () => {
 
   return (
     <MainLayout hero={heroContent}>
-      {/* O resto do conteúdo vai aqui, e aparecerá na área do gradiente */}
       <div className="text-brand-text-primary">
         <div className="container mx-auto max-w-6xl px-6 pb-12">
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-white text-center mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
               Busque sinais e aprenda com a nossa comunidade.
             </h2>
-            <div className="max-w-2xl mx-auto relative">
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                <Search className="w-6 h-6 text-gray-400" />
+            <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative">
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                <button type="submit" className="focus:outline-none p-2">
+                    <Search className="w-6 h-6 text-gray-400 hover:text-brand-blue" />
+                </button>
               </div>
               <input 
                 type="text" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-6 py-4 border border-gray-300 rounded-full text-lg placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent" 
                 placeholder="Digite o sinal que você procura..." 
               />
-            </div>
+            </form>
           </div>
-
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-white text-center mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
-              Destaques da comunidade
-            </h2>
-            <div className="flex justify-center mb-8">
-              <TabNavigation 
-                tabs={tabs}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                variant="pills"
-              />
+          
+          {isSearching ? (
+            <div className="mb-12">
+                <h2 className="text-3xl font-bold text-white text-center mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
+                    Resultados da Busca por "{searchTerm}"
+                </h2>
+                {loading ? (
+                    <p className="text-white text-center">A pesquisar...</p>
+                ) : searchResults.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {searchResults.map((sign) => <SignCard key={`search-${sign.id}`} sign={sign} />)}
+                    </div>
+                ) : (
+                    <p className="text-white text-center">Nenhum resultado encontrado.</p>
+                )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockSigns.map((sign) => (
-                <SignCard key={sign.id} sign={sign} />
-              ))}
+          ) : (
+            <div className="mb-12">
+              <h2 className="text-3xl font-bold text-white text-center mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
+                Destaques da comunidade
+              </h2>
+              <div className="flex justify-center mb-8">
+                <TabNavigation 
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  variant="pills"
+                />
+              </div>
+              {renderSinais()}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </MainLayout>
