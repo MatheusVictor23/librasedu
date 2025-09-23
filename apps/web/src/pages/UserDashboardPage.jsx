@@ -81,7 +81,7 @@ const UserDashboardPage = () => {
     if (sinaisToShow.length === 0) return <p className="text-white text-center">Nenhum sinal encontrado.</p>;
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {sinaisToShow.map((sign) => (
           <SignCard key={`${activeTab}-${sign.id}`} sign={sign} />
         ))}
@@ -90,12 +90,12 @@ const UserDashboardPage = () => {
   };
 
   const heroContent = (
-    <div className="container mx-auto max-w-6xl px-6 py-12">
+    <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-12">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
           Bem-vindo(a) ao <span className="text-brand-blue">Portal Tapiri</span>, {user?.nome}!
         </h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+        <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-3xl mx-auto px-4">
           Continue sua jornada no aprendizado de Libras. Explore novos sinais, 
           contribua com a comunidade e aprofunde seus conhecimentos na língua brasileira de sinais.
         </p>
@@ -106,36 +106,36 @@ const UserDashboardPage = () => {
   return (
     <MainLayout hero={heroContent}>
       <div className="text-brand-text-primary">
-        <div className="container mx-auto max-w-6xl px-6 pb-12">
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-white text-center mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6 pb-8 sm:pb-12">
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-6 sm:mb-8">
               Busque sinais e aprenda com a nossa comunidade.
             </h2>
             <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative">
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+              <div className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center">
                 <button type="submit" className="focus:outline-none p-2">
-                    <Search className="w-6 h-6 text-gray-400 hover:text-brand-blue" />
+                    <Search className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 hover:text-brand-blue" />
                 </button>
               </div>
               <input 
                 type="text" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-6 py-4 border border-gray-300 rounded-full text-lg placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent" 
+                className="w-full px-4 sm:px-6 py-3 sm:py-4 border border-gray-300 rounded-full text-base sm:text-lg placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent" 
                 placeholder="Digite o sinal que você procura..." 
               />
             </form>
           </div>
           
           {isSearching ? (
-            <div className="mb-12">
-                <h2 className="text-3xl font-bold text-white text-center mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
+            <div className="mb-8 sm:mb-12">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-6 sm:mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
                     Resultados da Busca por "{searchTerm}"
                 </h2>
                 {loading ? (
                     <p className="text-white text-center">A pesquisar...</p>
                 ) : searchResults.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         {searchResults.map((sign) => <SignCard key={`search-${sign.id}`} sign={sign} />)}
                     </div>
                 ) : (
@@ -143,11 +143,11 @@ const UserDashboardPage = () => {
                 )}
             </div>
           ) : (
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold text-white text-center mb-8" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.4)' }}>
+            <div className="mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-6 sm:mb-8">
                 Destaques da comunidade
               </h2>
-              <div className="flex justify-center mb-8">
+              <div className="flex justify-center mb-6 sm:mb-8">
                 <TabNavigation 
                   tabs={tabs}
                   activeTab={activeTab}

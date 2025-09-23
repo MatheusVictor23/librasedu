@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, Search, Bell, ChevronDown, User as UserIcon } from 'lucide-react';
+import { Home, Search, Bell, ChevronDown, User as UserIcon, Menu, X } from 'lucide-react';
 import UserDropdown from './UserDropdown'; // Importamos o novo componente
 
 const Logo = () => (
@@ -17,6 +17,7 @@ const Navbar = () => {
   const { user } = useAuth(); // Hook para verificar se o usuário está logado
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Lógica para o link "Sinais"
   const handleSinaisClick = (e) => {
@@ -101,40 +102,155 @@ const Navbar = () => {
 
   return (
     <nav className="bg-brand-blue/95 backdrop-blur-sm w-full rounded-2xl shadow-lg">
-      <div className="px-6">
-        <div className="flex items-center justify-between h-20">
+      <div className="px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           
-          {/* Seção Esquerda (Logo e Links) */}
-          <div className="flex items-center space-x-8">
+          {/* Seção Esquerda (Logo) */}
+          <div className="flex items-center">
             <div className="flex-shrink-0">
               <Link to={user ? "/dashboard" : "/"}>
                 <Logo />
               </Link>
             </div>
-            <div className="hidden md:block">
+            
+            {/* Links de navegação - Desktop */}
+            <div className="hidden lg:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <Link to={user ? "/dashboard" : "/"} className="text-white font-semibold px-3 py-2 text-sm">
+                <Link to={user ? "/dashboard" : "/"} className="text-white font-semibold px-3 py-2 text-sm hover:text-gray-200 transition-colors">
                   Início
                 </Link>
-                {/* O Link de "Sinais" agora tem a lógica de clique */}
-                <Link to="/sinais" onClick={handleSinaisClick} className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
+                <Link to="/sinais" onClick={handleSinaisClick} className="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
                   Sinais <ChevronDown size={16} className="ml-1" />
                 </Link>
-                <Link to="/apoema" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <Link to="/apoema" className="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Apoema
                 </Link>
-                <Link to="/sobre-nos" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <Link to="/sobre-nos" className="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Sobre nós
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Seção Direita (Busca e Ações do Usuário) */}
-          {/* Renderiza a parte direita da nav com base no estado de login */}
-          {user ? renderAuthenticatedNav() : renderVisitorNav()}
+          {/* Seção Direita - Desktop */}
+          <div className="hidden lg:flex items-center space-x-4">
+            {user ? renderAuthenticatedNav() : renderVisitorNav()}
+          </div>
 
+          {/* Botão do menu mobile */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-white hover:text-gray-300 transition-colors p-2"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
+
+        {/* Menu Mobile */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-white/20 mt-2 pt-4 pb-4">
+            <div className="flex flex-col space-y-2">
+              {/* Links de navegação mobile */}
+              <Link 
+                to={user ? "/dashboard" : "/"} 
+                className="text-white font-semibold px-3 py-2 text-base block hover:bg-white/10 rounded-md transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Início
+              </Link>
+              <Link 
+                to="/sinais" 
+                onClick={(e) => {
+                  handleSinaisClick(e);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-white hover:bg-white/10 px-3 py-2 text-base font-medium transition-colors block rounded-md"
+              >
+                Sinais
+              </Link>
+              <Link 
+                to="/apoema" 
+                className="text-white hover:bg-white/10 px-3 py-2 text-base font-medium transition-colors block rounded-md"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Apoema
+              </Link>
+              <Link 
+                to="/sobre-nos" 
+                className="text-white hover:bg-white/10 px-3 py-2 text-base font-medium transition-colors block rounded-md"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sobre nós
+              </Link>
+
+              {/* Seção do usuário mobile */}
+              {user ? (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  {/* Informações do usuário */}
+                  <div className="flex items-center px-3 py-2 mb-3">
+                    {user?.avatar ? (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.nome} 
+                        className="w-8 h-8 rounded-full mr-3"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-brand-blue-dark flex items-center justify-center mr-3">
+                        <UserIcon size={16} className="text-white" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="text-white text-sm font-medium">{user.nome}</p>
+                      <p className="text-gray-300 text-xs">Usuário</p>
+                    </div>
+                  </div>
+                  
+                  {/* Ações do usuário */}
+                  <div className="space-y-1">
+                    <Link 
+                      to="/perfil" 
+                      className="text-white hover:bg-white/10 px-3 py-2 text-sm block rounded-md transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Perfil
+                    </Link>
+                    <Link 
+                      to="/propor-sinal" 
+                      className="text-white hover:bg-white/10 px-3 py-2 text-sm block rounded-md transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Propor Sinal
+                    </Link>
+                    <button 
+                      className="text-red-300 hover:bg-red-500/10 px-3 py-2 text-sm block rounded-md transition-colors w-full text-left"
+                      onClick={() => {
+                        // Aqui seria a lógica de logout
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Sair
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 pt-4 border-t border-white/20 space-y-2">
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <button className="w-full py-2 px-4 text-sm font-semibold text-brand-blue bg-white rounded-lg hover:bg-gray-100 transition-colors">
+                      Entrar
+                    </button>
+                  </Link>
+                  <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                    <button className="w-full py-2 px-4 text-sm font-semibold text-white border border-white/80 rounded-lg hover:bg-white/10 transition-colors">
+                      Cadastrar-se
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

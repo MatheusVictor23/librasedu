@@ -6,8 +6,8 @@ const TabNavigation = ({ tabs, activeTab, onTabChange, variant = 'default' }) =>
   const getTabStyles = (tab, isActive) => {
     if (variant === 'pills') {
       return isActive
-        ? 'bg-green-600 text-white'
-        : 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+        ? 'bg-brand-blue text-white shadow-lg'
+        : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-md border border-gray-200';
     }
     
     return isActive
@@ -35,4 +35,3 @@ const TabNavigation = ({ tabs, activeTab, onTabChange, variant = 'default' }) =>
 };
 
 export default TabNavigation;
-

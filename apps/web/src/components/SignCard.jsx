@@ -1,48 +1,61 @@
 // src/components/SignCard.jsx
 
-import React, { useState } from 'react'; // CORREÇÃO: useState foi adicionado aqui
-import { Play, Heart, Bookmark, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Heart, Bookmark } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-// Função para extrair o ID do vídeo do YouTube de vários formatos de URL
+// Função para extrair o ID do vídeo do YouTube
 const getYouTubeVideoId = (url) => {
   if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
 };
 
-// Componente do Modal para exibir o vídeo
-const VideoModal = ({ videoId, title, onClose }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="flex justify-between items-center p-4 border-b">
-                <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-                <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200">
-                    <X size={24} />
-                </button>
-            </div>
-            <div className="relative" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                    title={title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute top-0 left-0 w-full h-full"
-                ></iframe>
-            </div>
-        </div>
-    </div>
-);
+// Componente do Modal de Vídeo
+const VideoModal = ({ videoId, title, onClose }) => {
+  if (!videoId) return null;
 
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b">
+          <h3 className="text-lg font-semibold truncate">{title}</h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+          >
+            ×
+          </button>
+        </div>
+        <div className="aspect-video">
+          <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+            title={title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SignCard = ({ sign }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const {
     id,
     nome: title, // Renomeado para 'title' para manter consistência interna
     videoUrl,
+    descricao: description,
+    categoria: category,
+    usuario: author, // Informações do autor
+    createdAt,
     _count: { SinalFavorito: likes } = { SinalFavorito: 0 } // Extrai a contagem de favoritos
   } = sign || {};
 
@@ -53,6 +66,22 @@ const SignCard = ({ sign }) => {
 
   const videoId = getYouTubeVideoId(videoUrl);
   const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+
+  // Formatar data
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
+    });
+  };
+
+  const handleCardClick = () => {
+    // Navegar para a página de detalhes do sinal
+    navigate(`/sinal/${id}`);
+  };
 
   const handlePlay = (e) => {
     e.stopPropagation(); // Impede que o clique no botão de play propague para o card
@@ -79,15 +108,15 @@ const SignCard = ({ sign }) => {
         {isModalOpen && <VideoModal videoId={videoId} title={title} onClose={() => setIsModalOpen(false)} />}
         
         <div 
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
-            onClick={handlePlay} // Clicar no card também abre o vídeo
+            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100"
+            onClick={handleCardClick} // Clicar no card navega para página de detalhes
         >
-          <div className="relative aspect-video bg-gray-200 flex items-center justify-center">
+          <div className="relative aspect-video bg-gray-200 flex items-center justify-center overflow-hidden">
             {thumbnailUrl ? (
               <img 
                 src={thumbnailUrl} 
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
               // Placeholder caso não consiga gerar a thumbnail
@@ -97,37 +126,83 @@ const SignCard = ({ sign }) => {
             )}
             
             <div
-              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             >
-              <Play size={48} className="text-white" />
+              <div className="bg-white/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                <Play size={32} className="text-brand-blue ml-1" />
+              </div>
             </div>
+
+            {/* Badge da categoria */}
+            {category && (
+              <div className="absolute top-3 left-3">
+                <span className="bg-brand-blue/90 text-white text-xs font-medium px-2 py-1 rounded-full backdrop-blur-sm">
+                  {category}
+                </span>
+              </div>
+            )}
+
+            {/* Botão de play separado para abrir modal */}
+            <button
+              onClick={handlePlay}
+              className="absolute top-3 right-3 bg-white/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+              title="Reproduzir vídeo"
+            >
+              <Play size={16} className="text-brand-blue ml-0.5" />
+            </button>
           </div>
 
           <div className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-2 truncate">{title}</h3>
+            <div className="mb-3">
+              <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 leading-tight">{title}</h3>
+              {description && (
+                <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{description}</p>
+              )}
+            </div>
+
+            {/* Informações do autor */}
+            {author && (
+              <div className="flex items-center mb-3 pb-3 border-b border-gray-100">
+                <div className="w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center mr-3">
+                  <span className="text-brand-blue font-medium text-sm">
+                    {author.nome ? author.nome.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {author.nome || 'Usuário'}
+                  </p>
+                  {createdAt && (
+                    <p className="text-xs text-gray-500">
+                      {formatDate(createdAt)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="flex items-center justify-between">
               <button 
                 onClick={handleLike}
-                className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm transition-colors ${
+                className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   isLiked 
-                    ? 'bg-red-100 text-red-600' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Heart size={16} className={isLiked ? 'fill-current' : ''} />
+                <Heart size={16} className={`transition-all duration-200 ${isLiked ? 'fill-current scale-110' : ''}`} />
                 <span>{likeCount}</span>
               </button>
 
               <button 
                 onClick={handleSave}
-                className={`p-2 rounded-full transition-colors ${
+                className={`p-2 rounded-full transition-all duration-200 ${
                   isSaved 
-                    ? 'bg-green-100 text-green-600' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-green-50 text-green-600 hover:bg-green-100' 
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Bookmark size={16} className={isSaved ? 'fill-current' : ''} />
+                <Bookmark size={16} className={`transition-all duration-200 ${isSaved ? 'fill-current scale-110' : ''}`} />
               </button>
             </div>
           </div>

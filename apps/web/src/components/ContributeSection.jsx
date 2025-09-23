@@ -4,9 +4,9 @@ import { Handshake, Upload, MessageSquareQuote, ArrowRight } from 'lucide-react'
 import Button from './Button';
 
 // Um sub-componente reutilizável para os cards de contribuição
-const ContributeCard = ({ icon, title, children }) => {
+const ContributeCard = ({ icon, title, children, delay = 0 }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-start text-left h-full">
+    <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-start text-left h-full" data-aos="fade-up" data-aos-delay={delay}>
       <div className="mb-4">
         {icon}
       </div>
@@ -23,6 +23,7 @@ const ContributeSection = () => {
         {/* ALTERAÇÃO AQUI: Adicionado o estilo 'text-shadow' para criar o contorno */}
         <h2 
           className="text-3xl md:text-4xl font-bold text-brand-text-primary" 
+          data-aos="fade-up"
         >
           Como você pode contribuir com o <span className="text-brand-blue">Portal Tapiri</span>?
         </h2>
@@ -32,6 +33,7 @@ const ContributeSection = () => {
           <ContributeCard 
             icon={<Handshake size={32} className="text-brand-blue" />}
             title="Seja nosso parceiro!"
+            delay={100}
           >
             Você pode contribuir com divulgação e blablablablabla
           </ContributeCard>
@@ -39,6 +41,7 @@ const ContributeSection = () => {
           <ContributeCard 
             icon={<Upload size={32} className="text-brand-blue" />}
             title="Submeta sinais!"
+            delay={200}
           >
             Submetendo sinais, você pode tornar nosso acervo mais rico.
           </ContributeCard>
@@ -46,13 +49,14 @@ const ContributeSection = () => {
           <ContributeCard 
             icon={<MessageSquareQuote size={32} className="text-brand-blue" />}
             title="Avalie sinais!"
+            delay={300}
           >
             Participe de nosso time de avaliadores especialistas em Libras.
           </ContributeCard>
         </div>
 
         {/* Botão de Chamada para Ação */}
-        <div className="mt-16">
+        <div className="mt-16" data-aos="fade-up" data-aos-delay="400">
           <Button variant="primary" className="inline-flex items-center gap-3">
             Participe agora!
             <ArrowRight size={20} />

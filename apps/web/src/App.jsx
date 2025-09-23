@@ -1,5 +1,6 @@
 // apps/web/src/App.jsx
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 
 // Importação das Páginas Públicas
 import HomePage from './pages/HomePage'; // ATUALIZADO
@@ -10,6 +11,7 @@ import LoginPage from './pages/LoginPage';
 import UserDashboardPage from './pages/UserDashboardPage'; // ATUALIZADO
 import SignsPage from './pages/SignsPage'; 
 import ProfilePage from './pages/ProfilePage';
+import SignDetailPage from './pages/SignDetailPage'; // Nova página de detalhes do sinal
 
 // Importação das Páginas do Painel de Administração
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -27,11 +29,22 @@ import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
 // Importação dos Componentes de Proteção de Rotas
 import { ProtectedRoute, EvaluatorRoute, AuthenticatedRoute } from './components/ProtectedRoute';
 
+// Componente para redirecionar usuários logados
+const HomeRedirect = () => {
+  const { user } = useAuth();
+  
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <HomePage />;
+};
+
 function App() {
   return (
     <Routes>
       {/* --- Rotas Públicas --- */}
-      <Route path='/' element={<HomePage />} /> {/* ATUALIZADO */}
+      <Route path='/' element={<HomeRedirect />} /> {/* ATUALIZADO para redirecionar usuários logados */}
       <Route path='/register' element={<RegisterPageWrapper />} />
       <Route path='/login' element={<LoginPage />} />
       
@@ -39,6 +52,7 @@ function App() {
       <Route path='/dashboard' element={<AuthenticatedRoute><UserDashboardPage /></AuthenticatedRoute>} /> {/* ATUALIZADO */}
       <Route path="/propor-sinal" element={<AuthenticatedRoute><SubmitSignPage /></AuthenticatedRoute>} />
       <Route path="/sinais" element={<AuthenticatedRoute><SignsPage /></AuthenticatedRoute>} /> {/* 2. Adicione a nova rota aqui */}
+      <Route path="/sinal/:id" element={<AuthenticatedRoute><SignDetailPage /></AuthenticatedRoute>} /> {/* Nova rota para detalhes do sinal */}
       <Route path="/perfil" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
 
 
