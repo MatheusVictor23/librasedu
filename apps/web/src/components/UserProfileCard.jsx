@@ -1,74 +1,52 @@
-// src/components/UserProfileCard.jsx
-
 import React from 'react';
-import { Mail, Calendar, MapPin, Users } from 'lucide-react';
+import { Mail, Building, Edit } from 'lucide-react';
 
 const UserProfileCard = ({ user, onEditProfile }) => {
-  const {
-    name = "Helena Silva",
-    email = "helenaSilva@email.com",
-    avatar,
-    // O Prisma usa 'role', então vamos adaptar para usar um nome mais amigável
-    role = "Usuário", 
-    birthDate = "15/09/1998",
-    location = "Manaus, Brasil"
-  } = user || {};
+  // Se o usuário ainda não foi carregado, exibe um placeholder
+  if (!user) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 text-center animate-pulse">
+        <div className="w-24 h-24 rounded-full bg-gray-300 mx-auto mb-4"></div>
+        <div className="h-6 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
+        <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
+      </div>
+    );
+  }
 
-  // Função para capitalizar a role (ex: USER -> Usuário)
-  const formatRole = (role) => {
-    if (!role) return 'Usuário';
-    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
-  };
+  const { nome, email, instituicao } = user;
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=0D83FF&color=fff&size=128`;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      {/* Profile Picture and Name */}
-      <div className="text-center mb-6">
+    <div className="bg-white rounded-lg shadow-md p-6 text-brand-text-primary">
+      <div className="flex flex-col items-center text-center">
         <img 
-          src={avatar || `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=31487A&color=fff`} 
-          alt={name}
-          className="w-24 h-24 rounded-full mx-auto mb-4"
+          src={avatarUrl}
+          alt={`Avatar de ${nome}`}
+          className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-sm"
         />
-        <h2 className="text-xl font-bold text-gray-900">{name}</h2>
-        <div className="flex items-center justify-center mt-2 text-gray-600">
-          <Users size={16} className="mr-2" />
-          <span className="text-sm">{formatRole(role)}</span>
+        <h2 className="text-xl font-bold text-gray-900">{nome}</h2>
+        <p className="text-sm text-gray-500 mt-1">Membro desde 2024</p>
+      </div>
+
+      <hr className="my-6" />
+
+      <div className="space-y-4 text-sm">
+        <div className="flex items-center space-x-3">
+          <Mail size={16} className="text-gray-400" />
+          <span className="text-gray-600 truncate">{email}</span>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Building size={16} className="text-gray-400" />
+          <span className="text-gray-600">{instituicao?.nome || 'Instituição não informada'}</span>
         </div>
       </div>
 
-      {/* User Information */}
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center text-gray-600">
-          <Mail size={16} className="mr-3 text-gray-400" />
-          <div>
-            <div className="text-sm text-gray-500">E-mail</div>
-            <div className="font-medium">{email}</div>
-          </div>
-        </div>
-
-        <div className="flex items-center text-gray-600">
-          <Calendar size={16} className="mr-3 text-gray-400" />
-          <div>
-            <div className="text-sm text-gray-500">Data de nascimento</div>
-            <div className="font-medium">{birthDate}</div>
-          </div>
-        </div>
-
-        <div className="flex items-center text-gray-600">
-          <MapPin size={16} className="mr-3 text-gray-400" />
-          <div>
-            <div className="text-sm text-gray-500">Localização</div>
-            <div className="font-medium">{location}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Edit Profile Button */}
-      <button 
+      <button
         onClick={onEditProfile}
-        className="w-full bg-brand-blue text-white py-3 rounded-lg font-semibold hover:bg-brand-blue-dark transition-colors"
+        className="mt-6 w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
       >
-        Editar perfil
+        <Edit size={16} />
+        <span>Editar Perfil</span>
       </button>
     </div>
   );
