@@ -112,9 +112,25 @@ const getProposalsByStatus = async (status) => {
   });
 };
 
+const getById = async (id) => {
+  return prisma.sinalProposto.findUnique({
+    where: { id: parseInt(id) },
+    include: {
+      disciplina: true,
+      proposer: true,
+      avaliador: {
+        select: {
+          nome: true
+        }
+      }
+    }
+  })
+}
+
 export default {
   getAll,
   create,
+  getById,
   getProposalsByDay,
   getPendingProposals,
   submitEvaluation,

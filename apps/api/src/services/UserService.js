@@ -106,6 +106,56 @@ const getUsersByRole = async () => {
   return roleCounts;
 };
 
+const getUserStats = async (userId) => {
+    const userIdInt = parseInt(userId, 10);
+
+    const submitted = prisma.sinalProposto.count({ where: { proposerId: userIdInt }});
+    const approved = prisma.sinalProposto.count({ where: { proposerId: userIdInt, status: 'APROVADO' }});
+    const rejected = prisma.sinalProposto.count({ where: { proposerId: userIdInt, status: 'REJEITADO' }});
+    const pending = prisma.sinalProposto.count({ where: { proposerId: userIdInt, status: 'PENDENTE' }});
+
+    const [submittedCount, approvedCount, rejectedCount, pendingCount] = await prisma.$transaction([submitted, approved, rejected, pending]);
+
+    const rankingResult = await prisma.$queryRaw`
+        SELECT "rank" FROM (
+            SELECT "proposerId", RANK() OVER (ORDER BY COUNT(*) DESC) as "rank"
+            FROM "SinalProposto"
+            WHERE status = 'APROVADO'
+            GROUP BY "proposerId"
+        ) as "ranked_users"
+        WHERE "proposerId" = ${userIdInt}
+    `;
+
+    const ranking = rankingResult.length > 0 ? Number(rankingResult[0].rank) : null;
+
+    return {
+        submitted: submittedCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+        pending: pendingCount,
+        ranking: ranking
+    }
+}
+
+const getFavoritedSinais = async (userId) => {
+    return prisma.sinalFavorito.findMany({
+        where: { usuarioId: parseInt(userId, 10) },
+        include: {
+            sinal: true
+        }
+    })
+}
+
+const getSubmittedProposals = async (userId) => {
+    return prisma.sinalProposto.findMany({
+        where: { proposerId: parseInt(userId, 10) },
+        orderBy: { createdAt: 'desc' },
+        include: {
+            disciplina: true
+        }
+    })
+}
+
 export default {
   getAll,
   getById,
@@ -116,5 +166,8 @@ export default {
   createEvaluator,
   getDashboardStats, 
   getRecentUsers,
-  getUsersByRole
+  getUsersByRole,
+  getUserStats,
+  getFavoritedSinais,
+  getSubmittedProposals
 };

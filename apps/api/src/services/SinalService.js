@@ -10,9 +10,72 @@ const getAll = async () => {
           avaliador: true,
         },
       },
+      _count: {
+        select: { SinalFavorito: true },
+      },
     },
   });
 };
+
+const getTrending = async (take = 6) => {
+  return prisma.sinal.findMany({
+    take,
+    include: {
+      _count: {
+        select: { SinalFavorito: true },
+      },
+    },
+    orderBy: {
+      SinalFavorito: {
+        _count: 'desc',
+      },
+    },
+  });
+};
+
+const getRecent = async (take = 6) => {
+  return prisma.sinal.findMany({
+    take,
+    orderBy: {
+      createdAt: 'desc',
+    },
+    include: {
+        _count: {
+            select: { SinalFavorito: true },
+        },
+    }
+  });
+};
+
+const getRecommended = async (take = 6) => {
+    const totalSinais = await prisma.sinal.count();
+    const skip = Math.max(0, Math.floor(Math.random() * totalSinais) - take);
+    return prisma.sinal.findMany({
+        take,
+        skip,
+        include: {
+            _count: {
+                select: { SinalFavorito: true },
+            },
+        }
+    });
+};
+
+const search = async (term) => {
+    return prisma.sinal.findMany({
+        where: {
+            nome: {
+                contains: term,
+                mode: 'insensitive'
+            }
+        },
+        include: {
+            _count: {
+                select: { SinalFavorito: true },
+            },
+        }
+    })
+}
 
 const createFromProposal = async (data) => {
   const { sinalPropostoId } = data;
@@ -38,4 +101,8 @@ const createFromProposal = async (data) => {
 export default {
   getAll,
   createFromProposal,
+  getTrending,
+  getRecent,
+  getRecommended,
+  search
 };

@@ -1,8 +1,12 @@
 import SinalService from '../services/SinalService.js';
 
 const getAllSinais = async (req, res) => {
+  // O novo método de pesquisa será o principal para listagem
+  const { searchTerm } = req.query;
   try {
-    const sinais = await SinalService.getAll();
+    const sinais = searchTerm 
+      ? await SinalService.search(searchTerm)
+      : await SinalService.getAll();
     res.json(sinais);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar sinais.', details: error.message });
@@ -22,7 +26,40 @@ const createSinal = async (req, res) => {
   }
 };
 
+// --- NOVOS MÉTODOS DO CONTROLADOR ---
+
+const getTrendingSinais = async (req, res) => {
+  try {
+    const sinais = await SinalService.getTrending();
+    res.json(sinais);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar sinais em alta.', details: error.message });
+  }
+};
+
+const getRecentSinais = async (req, res) => {
+  try {
+    const sinais = await SinalService.getRecent();
+    res.json(sinais);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar sinais recentes.', details: error.message });
+  }
+};
+
+const getRecommendedSinais = async (req, res) => {
+  try {
+    const sinais = await SinalService.getRecommended();
+    res.json(sinais);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar sinais recomendados.', details: error.message });
+  }
+};
+
+
 export default {
   getAllSinais,
   createSinal,
+  getTrendingSinais,
+  getRecentSinais,
+  getRecommendedSinais
 };

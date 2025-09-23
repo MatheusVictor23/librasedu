@@ -133,3 +133,30 @@ export const getUsersByRole = async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar dados de perfil dos utilizadores.', details: error.message });
     }
 };
+
+export const getMyStats = async (req, res) => {
+    try {
+        const stats = await UserService.getUserStats(req.user.id);
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar estatísticas do usuário.', details: error.message });
+    }
+};
+
+export const getMyFavoritedSinais = async (req, res) => {
+    try {
+        const sinais = await UserService.getFavoritedSinais(req.user.id);
+        res.json(sinais);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar sinais favoritados.', details: error.message });
+    }
+};
+
+export const getMySubmittedProposals = async (req, res) => {
+    try {
+        const proposals = await UserService.getSubmittedProposals(req.user.id);
+        res.json(proposals);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar propostas submetidas.', details: error.message });
+    }
+};

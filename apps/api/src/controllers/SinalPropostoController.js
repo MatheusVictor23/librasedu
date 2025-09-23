@@ -33,7 +33,28 @@ const createSinalProposto = async (req, res) => {
   }
 };
 
+const getSinalPropostoById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const proposal = await SinalPropostoService.getById(id);
+
+        if (!proposal) {
+            return res.status(404).json({ error: 'Proposta de sinal não encontrada.' });
+        }
+
+        // Medida de segurança: Garante que apenas o proponente ou um admin/avaliador pode ver
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'AVALIADOR' && req.user.id !== proposal.proposerId) {
+            return res.status(403).json({ error: 'Acesso não autorizado a esta proposta.' });
+        }
+
+        res.json(proposal);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar a proposta de sinal.', details: error.message });
+    }
+}
+
 export default {
   getAllSinaisPropostos,
   createSinalProposto,
+  getSinalPropostoById
 };
