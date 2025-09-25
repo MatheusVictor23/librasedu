@@ -38,6 +38,23 @@ const update = async (id, userData) => {
   });
 };
 
+/**
+ * NOVO: Atualiza o perfil do usuário autenticado.
+ * Apenas campos não-sensíveis (como nome) são permitidos aqui.
+ * @param {number} userId O ID do usuário extraído do token.
+ * @param {object} data Os dados a serem atualizados.
+ */
+const updateProfile = async (userId, data) => {
+    const { nome } = data; // Por enquanto, permite apenas a atualização do nome.
+    if (!nome || !nome.trim()) {
+        throw new Error('O campo nome é obrigatório.');
+    }
+    return prisma.usuario.update({
+        where: { id: parseInt(userId) },
+        data: { nome },
+    });
+};
+
 const remove = async (id) => {
   return prisma.usuario.delete({
     where: { id: parseInt(id) },
@@ -161,6 +178,7 @@ export default {
   getById,
   create,
   update,
+  updateProfile, // Exporta a nova função
   remove,
   getAllEvaluators,
   createEvaluator,

@@ -37,7 +37,6 @@ export const AuthProvider = ({ children }) => {
       } else if (userData.role === 'AVALIADOR') {
         navigate('/evaluator/dashboard');
       } else {
-        // ATUALIZAÇÃO AQUI: Redireciona o usuário comum para o dashboard
         navigate('/dashboard');
       }
     } catch (error) {
@@ -54,7 +53,17 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
-  const value = { token, user, loading, loginAction, logoutAction };
+  /**
+   * NOVO: Função para atualizar os dados do usuário no estado global e no localStorage.
+   * Garante que as mudanças de perfil sejam refletidas em tempo real em toda a UI.
+   * @param {object} updatedUserData - Os novos dados do usuário retornados pela API.
+   */
+  const updateAuthUser = (updatedUserData) => {
+    setUser(updatedUserData);
+    localStorage.setItem('authUser', JSON.stringify(updatedUserData));
+  };
+
+  const value = { token, user, loading, loginAction, logoutAction, updateAuthUser }; // Adiciona a nova função ao valor do contexto
 
   return (
     <AuthContext.Provider value={value}>

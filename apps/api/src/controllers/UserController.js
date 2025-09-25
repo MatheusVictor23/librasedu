@@ -43,6 +43,21 @@ export const updateUser = async (req, res) => {
     }
 };
 
+/**
+ * NOVO: Controlador para o usuário autenticado atualizar o seu próprio perfil.
+ */
+export const updateProfile = async (req, res) => {
+    try {
+        // O ID do usuário é obtido de forma segura a partir do token (injetado pelo middleware 'protect')
+        const updatedUser = await UserService.updateProfile(req.user.id, req.body);
+        // Retorna apenas os dados não-sensíveis do usuário atualizado
+        const { senha: _, ...userWithoutPassword } = updatedUser;
+        res.json(userWithoutPassword);
+    } catch (error) {
+        res.status(400).json({ error: 'Não foi possível atualizar o perfil.', details: error.message });
+    }
+};
+
 export const deleteUser = async (req, res) => {
     try {
         await UserService.remove(req.params.id);
@@ -70,6 +85,8 @@ export const createEvaluator = async (req, res) => {
         res.status(400).json({ error: 'Não foi possível criar o avaliador.', details: error.message });
     }
 };
+
+// ... (restante das funções do controlador sem alteração)
 
 export const getAllInstituicoes = async (req, res) => {
     try {
