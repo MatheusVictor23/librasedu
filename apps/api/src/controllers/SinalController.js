@@ -1,7 +1,6 @@
 import SinalService from '../services/SinalService.js';
 
 const getAllSinais = async (req, res) => {
-  // O novo método de pesquisa será o principal para listagem
   const { searchTerm } = req.query;
   try {
     const sinais = searchTerm 
@@ -10,6 +9,23 @@ const getAllSinais = async (req, res) => {
     res.json(sinais);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar sinais.', details: error.message });
+  }
+};
+
+/**
+ * NOVO: Controlador para buscar um sinal pelo ID.
+ * Lida com a requisição, chama o serviço e retorna a resposta ou um erro.
+ */
+const getSinalById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sinal = await SinalService.getById(id);
+    res.status(200).json(sinal);
+  } catch (error) {
+    if (error.message === 'Sinal não encontrado') {
+      return res.status(404).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Erro ao buscar o sinal.', details: error.message });
   }
 };
 
@@ -25,8 +41,6 @@ const createSinal = async (req, res) => {
     res.status(400).json({ error: 'Não foi possível criar o sinal.', details: error.message });
   }
 };
-
-// --- NOVOS MÉTODOS DO CONTROLADOR ---
 
 const getTrendingSinais = async (req, res) => {
   try {
@@ -58,6 +72,7 @@ const getRecommendedSinais = async (req, res) => {
 
 export default {
   getAllSinais,
+  getSinalById, // Exporta o novo controlador
   createSinal,
   getTrendingSinais,
   getRecentSinais,

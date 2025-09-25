@@ -17,6 +17,39 @@ const getAll = async () => {
   });
 };
 
+/**
+ * NOVO: Busca um sinal específico pelo seu ID.
+ * A consulta inclui dados aninhados da proposta original, do proponente,
+ * da instituição, do avaliador e da disciplina.
+ */
+const getById = async (id) => {
+  const sinal = await prisma.sinal.findUnique({
+    where: { id: parseInt(id, 10) },
+    include: {
+      disciplina: true,
+      sinalProposto: {
+        include: {
+          proposer: {
+            include: {
+              instituicao: true,
+            },
+          },
+          avaliador: true,
+        },
+      },
+      _count: {
+        select: { SinalFavorito: true },
+      },
+    },
+  });
+
+  if (!sinal) {
+    throw new Error('Sinal não encontrado');
+  }
+  return sinal;
+};
+
+
 const getTrending = async (take = 6) => {
   return prisma.sinal.findMany({
     take,
@@ -100,6 +133,7 @@ const createFromProposal = async (data) => {
 
 export default {
   getAll,
+  getById, // Exporta a nova função
   createFromProposal,
   getTrending,
   getRecent,
