@@ -43,6 +43,21 @@ export const updateUser = async (req, res) => {
     }
 };
 
+/**
+ * NOVO: Controlador para o usuário autenticado atualizar o seu próprio perfil.
+ */
+export const updateProfile = async (req, res) => {
+    try {
+        // O ID do usuário é obtido de forma segura a partir do token (injetado pelo middleware 'protect')
+        const updatedUser = await UserService.updateProfile(req.user.id, req.body);
+        // Retorna apenas os dados não-sensíveis do usuário atualizado
+        const { senha: _, ...userWithoutPassword } = updatedUser;
+        res.json(userWithoutPassword);
+    } catch (error) {
+        res.status(400).json({ error: 'Não foi possível atualizar o perfil.', details: error.message });
+    }
+};
+
 export const deleteUser = async (req, res) => {
     try {
         await UserService.remove(req.params.id);
@@ -70,6 +85,8 @@ export const createEvaluator = async (req, res) => {
         res.status(400).json({ error: 'Não foi possível criar o avaliador.', details: error.message });
     }
 };
+
+// ... (restante das funções do controlador sem alteração)
 
 export const getAllInstituicoes = async (req, res) => {
     try {
@@ -131,5 +148,32 @@ export const getUsersByRole = async (req, res) => {
         res.json(data);
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar dados de perfil dos utilizadores.', details: error.message });
+    }
+};
+
+export const getMyStats = async (req, res) => {
+    try {
+        const stats = await UserService.getUserStats(req.user.id);
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar estatísticas do usuário.', details: error.message });
+    }
+};
+
+export const getMyFavoritedSinais = async (req, res) => {
+    try {
+        const sinais = await UserService.getFavoritedSinais(req.user.id);
+        res.json(sinais);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar sinais favoritados.', details: error.message });
+    }
+};
+
+export const getMySubmittedProposals = async (req, res) => {
+    try {
+        const proposals = await UserService.getSubmittedProposals(req.user.id);
+        res.json(proposals);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar propostas submetidas.', details: error.message });
     }
 };

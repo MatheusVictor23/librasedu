@@ -33,40 +33,28 @@ const createSinalProposto = async (req, res) => {
   }
 };
 
+const getSinalPropostoById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const proposal = await SinalPropostoService.getById(id);
 
+        if (!proposal) {
+            return res.status(404).json({ error: 'Proposta de sinal não encontrada.' });
+        }
 
+        // Medida de segurança: Garante que apenas o proponente ou um admin/avaliador pode ver
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'AVALIADOR' && req.user.id !== proposal.proposerId) {
+            return res.status(403).json({ error: 'Acesso não autorizado a esta proposta.' });
+        }
 
-const putSinalProposto = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { avaliadorId, comentariosAvaliador, status } = req.body;
-
-    if (!avaliadorId || !status) {
-      return res.status(400).json({
-        sucesso: false,
-        mensagem: "avaliadorId e status são obrigatórios"
-      });
+        res.json(proposal);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar a proposta de sinal.', details: error.message });
     }
-
-    const resultado = await SinalPropostoService.updateSinalProposto(id, {
-      avaliadorId,
-      comentariosAvaliador,
-      status
-    });
-
-    if (!resultado.sucesso) {
-      return res.status(500).json(resultado);
-    }
-
-    return res.json(resultado);
-  } catch (error) {
-    console.error("Erro no controller putSinalProposto:", error);
-    return res.status(500).json({ sucesso: false, mensagem: "Erro interno do servidor" });
-  }
-};
+}
 
 export default {
   getAllSinaisPropostos,
   createSinalProposto,
-  putSinalProposto
+  getSinalPropostoById
 };

@@ -8,11 +8,9 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  // 1. Adicionar um estado de 'loading'
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 2. Usar useEffect para verificar o localStorage apenas uma vez, quando o app carrega
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
@@ -21,7 +19,6 @@ export const AuthProvider = ({ children }) => {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
-    // Independentemente de encontrar ou não, a verificação inicial terminou
     setLoading(false);
   }, []);
 
@@ -40,7 +37,7 @@ export const AuthProvider = ({ children }) => {
       } else if (userData.role === 'AVALIADOR') {
         navigate('/evaluator/dashboard');
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Falha no login', error);
@@ -56,10 +53,18 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
-  // 3. Passar o estado 'loading' para o provider
-  const value = { token, user, loading, loginAction, logoutAction };
+  /**
+   * NOVO: Função para atualizar os dados do usuário no estado global e no localStorage.
+   * Garante que as mudanças de perfil sejam refletidas em tempo real em toda a UI.
+   * @param {object} updatedUserData - Os novos dados do usuário retornados pela API.
+   */
+  const updateAuthUser = (updatedUserData) => {
+    setUser(updatedUserData);
+    localStorage.setItem('authUser', JSON.stringify(updatedUserData));
+  };
 
-  // 4. Não renderizar nada enquanto estiver a carregar o estado inicial
+  const value = { token, user, loading, loginAction, logoutAction, updateAuthUser }; // Adiciona a nova função ao valor do contexto
+
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}

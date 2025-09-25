@@ -17,7 +17,7 @@ const RankingSection = () => {
     <section className="py-20">
       <div className="container mx-auto max-w-4xl px-6">
         {/* Card do Cabeçalho */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 relative overflow-hidden mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8 relative overflow-hidden mb-8" data-aos="fade-up">
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">
               Ranking dos melhores <br />
@@ -43,8 +43,13 @@ const RankingSection = () => {
 
         {/* Lista do Ranking */}
         <div className="space-y-3">
-          {collaborators.map((collab) => (
-            <div key={collab.rank} className="bg-white rounded-2xl shadow-lg p-4 flex items-center transition hover:shadow-xl hover:scale-[1.02]">
+          {collaborators.map((collab, index) => (
+            <div 
+              key={collab.rank} 
+              className="bg-white rounded-2xl shadow-lg p-4 flex items-center transition hover:shadow-xl hover:scale-[1.02]"
+              data-aos="fade-up" 
+              data-aos-delay={index * 100}
+            >
               <div className="w-12 text-center">
                 <p className="text-2xl font-bold text-gray-400">{collab.rank}</p>
               </div>

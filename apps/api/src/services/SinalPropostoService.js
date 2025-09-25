@@ -135,32 +135,25 @@ const getProposalsByStatus = async (status) => {
   });
 };
 
-
-const updateSinalProposto = async (id, data) => {
-  try {
-    // Atualiza os campos do sinal proposto
-    const sinal = await prisma.sinalProposto.update({
-      where: { id: Number(id) },
-      data: {
-        avaliadorId: data.avaliadorId,
-        comentariosAvaliador: data.comentariosAvaliador,
-        updatedAt: new Date(),
-        // se quiser salvar status, pode incluir aqui
-        status: data.status || 'PENDENTE'
+const getById = async (id) => {
+  return prisma.sinalProposto.findUnique({
+    where: { id: parseInt(id) },
+    include: {
+      disciplina: true,
+      proposer: true,
+      avaliador: {
+        select: {
+          nome: true
+        }
       }
-    });
-
-    return { sucesso: true, dados: sinal };
-  } catch (error) {
-    console.error("Erro no service updateSinalProposto:", error);
-    return { sucesso: false, mensagem: "Erro ao atualizar sinal proposto" };
-  }
-};
-
+    }
+  })
+}
 
 export default {
   getAll,
   create,
+  getById,
   getProposalsByDay,
   getPendingProposals,
   submitEvaluation,
