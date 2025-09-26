@@ -1,4 +1,4 @@
-// apps/web/src/components/EvaluationModal.jsx
+// [INÍCIO DO CÓDIGO]
 import React, { useState } from 'react';
 import api from '../api/axiosConfig';
 import { X } from 'lucide-react';
@@ -8,12 +8,8 @@ const EvaluationModal = ({ proposal, onClose, onSave }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Função para converter o link do YouTube para o formato "embed"
-  const getVideoEmbedUrl = (url) => {
-    if (!url) return '';
-    const videoIdMatch = url.match(/(?:v=|\/embed\/|\.be\/)([\w-]{11})/);
-    return videoIdMatch ? `https://www.youtube.com/embed/${videoIdMatch[1]}` : '';
-  };
+  // NOVO: Constrói a URL completa para o vídeo bruto hospedado pela API
+  const videoBrutoSrc = `http://localhost:3000/${proposal.videoBrutoUrl}`;
 
   const handleSubmit = async (status) => {
     setIsLoading(true);
@@ -34,7 +30,6 @@ const EvaluationModal = ({ proposal, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-      {/* 1. Modal com largura aumentada (max-w-4xl) */}
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b">
           <h3 className="text-xl font-bold text-gray-800">{proposal.nome}</h3>
@@ -44,20 +39,18 @@ const EvaluationModal = ({ proposal, onClose, onSave }) => {
         </div>
 
         <div className="p-6 space-y-4 overflow-y-auto">
-          {/* 2. Layout em duas colunas para ecrãs médios e acima */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Coluna do Vídeo */}
-            <div className="w-full">
-              <div className="relative" style={{ paddingBottom: '56.25%' }}> {/* Proporção 16:9 */}
-                <iframe
-                  src={getVideoEmbedUrl(proposal.videoUrl)}
-                  title={`Vídeo para ${proposal.nome}`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
-                ></iframe>
-              </div>
+            
+            {/* ALTERAÇÃO AQUI: Substituímos o iframe por um player de vídeo HTML5 */}
+            <div className="w-full bg-gray-900 rounded-lg overflow-hidden">
+              <video
+                key={videoBrutoSrc} // A chave garante que o vídeo recarregue se a proposta mudar
+                controls
+                className="w-full h-full object-contain"
+              >
+                <source src={videoBrutoSrc} type="video/mp4" />
+                Seu navegador não suporta a tag de vídeo.
+              </video>
             </div>
 
             {/* Coluna da Descrição */}
@@ -110,3 +103,4 @@ const EvaluationModal = ({ proposal, onClose, onSave }) => {
 };
 
 export default EvaluationModal;
+// [FIM DO CÓDIGO]
