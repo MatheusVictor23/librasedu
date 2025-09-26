@@ -15,13 +15,13 @@ const getAll = async () => {
 };
 
 const create = async (data) => {
-  const { nome, descricao, videoUrl, disciplinaId, proposerId } = data;
+  const { nome, descricao, videoBrutoUrl, disciplinaId, proposerId } = data;
 
   return prisma.sinalProposto.create({
     data: {
       nome,
       descricao,
-      videoUrl,
+      videoBrutoUrl,
       disciplina: {
         connect: { id: parseInt(disciplinaId) }
       },
@@ -75,6 +75,23 @@ const getPendingProposals = async () => {
   });
 };
 
+const getApprovedAndUnpublished = async () => {
+  return prisma.sinalProposto.findMany({
+    where: {
+      status: 'APROVADO',
+      Sinal: null,
+    },
+    include: {
+      proposer: { select: { nome: true } },
+      avaliador: { select: { nome: true } },
+      disciplina: { select: { nome: true } },
+    },
+    orderBy: {
+      updatedAt: 'asc',
+    },
+  });
+};
+
 const submitEvaluation = async (proposalId, evaluatorId, status, comentarios) => {
   const updatedProposal = await prisma.sinalProposto.update({
     where: { id: parseInt(proposalId) },
@@ -84,18 +101,6 @@ const submitEvaluation = async (proposalId, evaluatorId, status, comentarios) =>
       comentariosAvaliador: comentarios,
     },
   });
-
-  if (status === 'APROVADO') {
-    await prisma.sinal.create({
-      data: {
-        nome: updatedProposal.nome,
-        descricao: updatedProposal.descricao,
-        videoUrl: updatedProposal.videoUrl,
-        disciplinaId: updatedProposal.disciplinaId,
-        sinalPropostoId: updatedProposal.id,
-      },
-    });
-  }
 
   return updatedProposal;
 };
@@ -133,6 +138,7 @@ export default {
   getById,
   getProposalsByDay,
   getPendingProposals,
+  getApprovedAndUnpublished,
   submitEvaluation,
   getProposalsByStatus,
 };

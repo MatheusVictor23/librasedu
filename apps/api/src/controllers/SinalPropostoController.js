@@ -16,20 +16,42 @@ const createSinalProposto = async (req, res) => {
       return res.status(401).json({ error: 'Não autorizado. O ID do utilizador não foi encontrado na requisição.' });
     }
     
-    const proposerId = req.user.id;
-    const { nome, descricao, videoUrl, disciplinaId } = req.body;
-
-    if (!nome || !descricao || !videoUrl || !disciplinaId) {
-      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+    if (!req.file) {
+      return res.status(400).json({ error: 'O arquivo de vídeo é obrigatório.' });
     }
 
-    const newSinalProposto = await SinalPropostoService.create({ ...req.body, proposerId });
+    const proposerId = req.user.id;
+    const { nome, descricao, disciplinaId } = req.body;
+    const videoBrutoUrl = req.file.path;
+
+    if (!nome || !descricao || !disciplinaId) {
+      return res.status(400).json({ error: 'Todos os campos de texto são obrigatórios.' });
+    }
+
+    const newSinalProposto = await SinalPropostoService.create({
+      nome,
+      descricao,
+      disciplinaId,
+      proposerId,
+      videoBrutoUrl
+    });
+
     res.status(201).json(newSinalProposto);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return res.status(409).json({ error: 'Já existe uma proposta de sinal com este nome.' });
     }
     res.status(500).json({ error: 'Não foi possível criar a proposta de sinal.', details: error.message });
+  }
+};
+
+// NOVA FUNÇÃO: Controlador para buscar propostas aprovadas e não publicadas
+const getApprovedUnpublishedProposals = async (req, res) => {
+  try {
+    const proposals = await SinalPropostoService.getApprovedAndUnpublished();
+    res.json(proposals);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar propostas aprovadas.', details: error.message });
   }
 };
 
@@ -42,7 +64,6 @@ const getSinalPropostoById = async (req, res) => {
             return res.status(404).json({ error: 'Proposta de sinal não encontrada.' });
         }
 
-        // Medida de segurança: Garante que apenas o proponente ou um admin/avaliador pode ver
         if (req.user.role !== 'ADMIN' && req.user.role !== 'AVALIADOR' && req.user.id !== proposal.proposerId) {
             return res.status(403).json({ error: 'Acesso não autorizado a esta proposta.' });
         }
@@ -56,5 +77,6 @@ const getSinalPropostoById = async (req, res) => {
 export default {
   getAllSinaisPropostos,
   createSinalProposto,
-  getSinalPropostoById
+  getSinalPropostoById,
+  getApprovedUnpublishedProposals // Exporta a nova função
 };
