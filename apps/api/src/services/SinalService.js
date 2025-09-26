@@ -17,11 +17,6 @@ const getAll = async () => {
   });
 };
 
-/**
- * NOVO: Busca um sinal específico pelo seu ID.
- * A consulta inclui dados aninhados da proposta original, do proponente,
- * da instituição, do avaliador e da disciplina.
- */
 const getById = async (id) => {
   const sinal = await prisma.sinal.findUnique({
     where: { id: parseInt(id, 10) },
@@ -110,21 +105,26 @@ const search = async (term) => {
     })
 }
 
-const createFromProposal = async (data) => {
-  const { sinalPropostoId } = data;
+// ATUALIZAÇÃO: Esta função agora é chamada pelo Admin para publicar o sinal.
+const createFromProposal = async (proposalId, youtubeUrl) => {
   const proposta = await prisma.sinalProposto.findUnique({
-    where: { id: parseInt(sinalPropostoId) },
+    where: { id: parseInt(proposalId) },
   });
 
   if (!proposta) {
     throw new Error('Proposta de sinal não encontrada.');
   }
 
+  if (proposta.status !== 'APROVADO') {
+      throw new Error('Esta proposta ainda não foi aprovada por um avaliador.');
+  }
+
+  // Cria o Sinal Oficial com a URL do YouTube fornecida pelo admin
   return prisma.sinal.create({
     data: {
       nome: proposta.nome,
       descricao: proposta.descricao,
-      videoUrl: proposta.videoUrl,
+      youtubeUrl: youtubeUrl, // Usa a URL final
       disciplina: { connect: { id: proposta.disciplinaId } },
       sinalProposto: { connect: { id: proposta.id } },
     },
@@ -133,7 +133,7 @@ const createFromProposal = async (data) => {
 
 export default {
   getAll,
-  getById, // Exporta a nova função
+  getById,
   createFromProposal,
   getTrending,
   getRecent,

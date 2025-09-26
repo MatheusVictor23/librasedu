@@ -12,10 +12,6 @@ const getAllSinais = async (req, res) => {
   }
 };
 
-/**
- * NOVO: Controlador para buscar um sinal pelo ID.
- * Lida com a requisição, chama o serviço e retorna a resposta ou um erro.
- */
 const getSinalById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -39,6 +35,22 @@ const createSinal = async (req, res) => {
     res.status(201).json(newSinal);
   } catch (error) {
     res.status(400).json({ error: 'Não foi possível criar o sinal.', details: error.message });
+  }
+};
+
+const publishSinal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { youtubeUrl } = req.body;
+
+    if (!youtubeUrl || !youtubeUrl.trim()) {
+      return res.status(400).json({ error: 'A URL do YouTube é obrigatória.' });
+    }
+
+    const newSinal = await SinalService.createFromProposal(id, youtubeUrl);
+    res.status(201).json(newSinal);
+  } catch (error) {
+    res.status(400).json({ error: 'Não foi possível publicar o sinal.', details: error.message });
   }
 };
 
@@ -69,11 +81,11 @@ const getRecommendedSinais = async (req, res) => {
   }
 };
 
-
 export default {
   getAllSinais,
-  getSinalById, // Exporta o novo controlador
+  getSinalById,
   createSinal,
+  publishSinal,
   getTrendingSinais,
   getRecentSinais,
   getRecommendedSinais
