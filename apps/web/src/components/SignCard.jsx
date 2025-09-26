@@ -1,5 +1,4 @@
-// src/components/SignCard.jsx
-
+// [INÍCIO DO CÓDIGO]
 import React, { useState } from 'react';
 import { Play, Heart, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -50,24 +49,27 @@ const SignCard = ({ sign }) => {
 
   const {
     id,
-    nome: title, // Renomeado para 'title' para manter consistência interna
-    videoUrl,
+    nome: title,
+    youtubeUrl, // CORREÇÃO AQUI: 'videoUrl' foi alterado para 'youtubeUrl'
     descricao: description,
-    categoria: category,
-    usuario: author, // Informações do autor
+    // A 'categoria' agora pode vir de sinal.disciplina.nome
+    disciplina, // Objeto disciplina
+    sinalProposto, // Objeto sinalProposto para obter o proponente
     createdAt,
-    _count: { SinalFavorito: likes } = { SinalFavorito: 0 } // Extrai a contagem de favoritos
+    _count: { SinalFavorito: likes } = { SinalFavorito: 0 }
   } = sign || {};
 
-  // Estados locais para simular o like/save (a lógica completa viria com a API de interação)
+  // Extrai o nome do autor e categoria de forma segura
+  const author = sinalProposto?.proposer; // Usa o proposer dentro de sinalProposto
+  const category = disciplina?.nome; // Usa o nome da disciplina como categoria
+
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
 
-  const videoId = getYouTubeVideoId(videoUrl);
+  const videoId = getYouTubeVideoId(youtubeUrl); // Usa a variável corrigida
   const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
 
-  // Formatar data
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -79,12 +81,11 @@ const SignCard = ({ sign }) => {
   };
 
   const handleCardClick = () => {
-    // Navegar para a página de detalhes do sinal
     navigate(`/sinal/${id}`);
   };
 
   const handlePlay = (e) => {
-    e.stopPropagation(); // Impede que o clique no botão de play propague para o card
+    e.stopPropagation();
     if (videoId) {
       setIsModalOpen(true);
     } else {
@@ -109,7 +110,7 @@ const SignCard = ({ sign }) => {
         
         <div 
             className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100"
-            onClick={handleCardClick} // Clicar no card navega para página de detalhes
+            onClick={handleCardClick}
         >
           <div className="relative aspect-video bg-gray-200 flex items-center justify-center overflow-hidden">
             {thumbnailUrl ? (
@@ -119,7 +120,6 @@ const SignCard = ({ sign }) => {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
-              // Placeholder caso não consiga gerar a thumbnail
               <div className="w-full h-full bg-brand-blue flex items-center justify-center">
                 <Play size={48} className="text-white" />
               </div>
@@ -142,7 +142,6 @@ const SignCard = ({ sign }) => {
               </div>
             )}
 
-            {/* Botão de play separado para abrir modal */}
             <button
               onClick={handlePlay}
               className="absolute top-3 right-3 bg-white/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
@@ -212,3 +211,4 @@ const SignCard = ({ sign }) => {
 };
 
 export default SignCard;
+// [FIM DO CÓDIGO]

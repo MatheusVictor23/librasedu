@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Bookmark, Share2, Play, ChevronDown, User } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
-import api from '../api/axiosConfig'; // Importa a instância configurada do Axios
+import api from '../api/axiosConfig';
 
 const SignDetailPage = () => {
   const { id } = useParams();
@@ -43,7 +43,8 @@ const SignDetailPage = () => {
     return match ? match[1] : null;
   };
   
-  const videoId = getYouTubeVideoId(sign?.videoUrl);
+  // CORREÇÃO AQUI: Usa 'youtubeUrl' em vez de 'videoUrl'
+  const videoId = getYouTubeVideoId(sign?.youtubeUrl);
   const videoThumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '/api/placeholder/600/400';
 
   const handleVideoPlay = () => {
