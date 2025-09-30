@@ -9,6 +9,7 @@ import SinalRoutes from './SinalRoutes.js';
 import AuthRoutes from './AuthRoutes.js';
 import AdminRoutes from './AdminRoutes.js';
 import EvaluatorRoutes from './EvaluatorRoutes.js';
+import SolicitacaoRoutes from './SolicitacaoRoutes.js'; // 1. Importar as novas rotas
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use(SinalPropostoRoutes);
 router.use(SinalRoutes); 
 router.use(AdminRoutes);
 router.use(EvaluatorRoutes);
+router.use(SolicitacaoRoutes); // 2. Adicionar as novas rotas
 
 export default router;
