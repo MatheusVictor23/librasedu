@@ -1,23 +1,23 @@
-// apps/web/src/App.jsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
 // Importação das Páginas Públicas
-import HomePage from './pages/HomePage'; // ATUALIZADO
+import HomePage from './pages/HomePage';
 import RegisterPageWrapper from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 
 // Importação da Página do Dashboard do Usuário
-import UserDashboardPage from './pages/UserDashboardPage'; // ATUALIZADO
+import UserDashboardPage from './pages/UserDashboardPage';
 import SignsPage from './pages/SignsPage'; 
 import ProfilePage from './pages/ProfilePage';
-import SignDetailPage from './pages/SignDetailPage'; // Nova página de detalhes do sinal
+import SignDetailPage from './pages/SignDetailPage';
 
 // Importação das Páginas do Painel de Administração
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminEvaluatorsPage from './pages/AdminEvaluatorsPage';
 import AdminSinaisPage from './pages/AdminSinaisPage';
+import AdminInstitutionsPage from './pages/AdminInstitutionsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import ApprovedProposalsPage from './pages/ApprovedProposalsPage';
 import RejectedProposalsPage from './pages/RejectedProposalsPage';
@@ -26,8 +26,8 @@ import SubmitSignPage from './pages/SubmitSignPage';
 // Importação da Página do Painel do Avaliador
 import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
 
-// Importação dos Componentes de Proteção de Rotas
-import { ProtectedRoute, EvaluatorRoute, AuthenticatedRoute } from './components/ProtectedRoute';
+// ATUALIZAÇÃO: Importar a nova rota protegida
+import { ProtectedRoute, EvaluatorRoute, AuthenticatedRoute, ContributorRoute } from './components/ProtectedRoute';
 
 // Componente para redirecionar usuários logados
 const HomeRedirect = () => {
@@ -44,15 +44,18 @@ function App() {
   return (
     <Routes>
       {/* --- Rotas Públicas --- */}
-      <Route path='/' element={<HomeRedirect />} /> {/* ATUALIZADO para redirecionar usuários logados */}
+      <Route path='/' element={<HomeRedirect />} />
       <Route path='/register' element={<RegisterPageWrapper />} />
       <Route path='/login' element={<LoginPage />} />
       
       {/* --- Rotas do Usuário Autenticado --- */}
-      <Route path='/dashboard' element={<AuthenticatedRoute><UserDashboardPage /></AuthenticatedRoute>} /> {/* ATUALIZADO */}
-      <Route path="/propor-sinal" element={<AuthenticatedRoute><SubmitSignPage /></AuthenticatedRoute>} />
-      <Route path="/sinais" element={<AuthenticatedRoute><SignsPage /></AuthenticatedRoute>} /> {/* 2. Adicione a nova rota aqui */}
-      <Route path="/sinal/:id" element={<AuthenticatedRoute><SignDetailPage /></AuthenticatedRoute>} /> {/* Nova rota para detalhes do sinal */}
+      <Route path='/dashboard' element={<AuthenticatedRoute><UserDashboardPage /></AuthenticatedRoute>} />
+      
+      {/* ATUALIZAÇÃO: A rota de submissão agora usa ContributorRoute */}
+      <Route path="/propor-sinal" element={<ContributorRoute><SubmitSignPage /></ContributorRoute>} />
+
+      <Route path="/sinais" element={<AuthenticatedRoute><SignsPage /></AuthenticatedRoute>} />
+      <Route path="/sinal/:id" element={<AuthenticatedRoute><SignDetailPage /></AuthenticatedRoute>} />
       <Route path="/perfil" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
 
 
@@ -60,6 +63,7 @@ function App() {
       <Route path='/admin' element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
       <Route path='/admin/users' element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
       <Route path='/admin/evaluators' element={<ProtectedRoute><AdminEvaluatorsPage /></ProtectedRoute>} />
+      <Route path='/admin/institutions' element={<ProtectedRoute><AdminInstitutionsPage /></ProtectedRoute>} />
       <Route path='/admin/sinais' element={<ProtectedRoute><AdminSinaisPage /></ProtectedRoute>} />
       <Route path='/admin/settings' element={<ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
 
