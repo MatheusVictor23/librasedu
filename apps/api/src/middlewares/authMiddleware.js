@@ -14,7 +14,7 @@ export const protect = async (req, res, next) => {
 
       req.user = await prisma.usuario.findUnique({
         where: { id: decoded.userId },
-        select: { id: true, email: true, nome: true, role: true }
+        select: { id: true, email: true, nome: true, role: true, idInstituicao: true }
       });
 
       if (!req.user) {
@@ -29,6 +29,15 @@ export const protect = async (req, res, next) => {
 
   if (!token) {
     return res.status(401).json({ error: 'Não autorizado, nenhum token fornecido.' });
+  }
+};
+
+// NOVO MIDDLEWARE: Verifica se o utilizador tem um vínculo institucional
+export const hasInstitutionLink = (req, res, next) => {
+  if (req.user && req.user.idInstituicao) {
+    next();
+  } else {
+    res.status(403).json({ error: 'Acesso negado. É necessário ter um vínculo institucional aprovado para submeter um sinal.' });
   }
 };
 
