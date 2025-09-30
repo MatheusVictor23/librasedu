@@ -6,26 +6,29 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../generated/prisma" 
 }
 
 model Usuario {
   id              Int              @id @default(autoincrement())
-  idInstituicao   Int
+  idInstituicao   Int?
   nome            String
   cpf             String
   email           String           @unique
   senha           String
+  avatarUrl       String?          
   role            Role             @default(USER)
   sinaisPropostos SinalProposto[]  @relation("SinaisPropostos")
   sinaisAvaliados SinalProposto[]  @relation("SinaisAvaliados")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt()
 
-  instituicao     Instituicao      @relation(fields: [idInstituicao], references: [id])
+  instituicao     Instituicao?     @relation(fields: [idInstituicao], references: [id])
+  SinalFavorito   SinalFavorito[]
 
-  SinalFavorito SinalFavorito[]
-}
+  solicitacoesInstituicao SolicitacaoInstituicao[]
+  solicitacoesVinculo     SolicitacaoVinculo[]
+} 
 
 enum Role {
   USER
@@ -34,11 +37,17 @@ enum Role {
 }
 
 model Instituicao {
-  id        Int      @id @default(autoincrement())
-  nome      String   @unique
-  sigla     String
-  usuarios  Usuario[]
-  createdAt DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  nome               String   @unique
+  sigla              String
+  cidade             String   // <-- ADICIONAR ESTA LINHA
+  estado             String   // <-- ADICIONAR ESTA LINHA
+  nomeRepresentante  String   // <-- ADICIONAR ESTA LINHA
+  cargoRepresentante String   // <-- ADICIONAR ESTA LINHA
+  usuarios           Usuario[]
+  createdAt          DateTime @default(now())
+
+  solicitacoesVinculo SolicitacaoVinculo[]
 }
 
 model AreaConhecimento {
@@ -77,7 +86,7 @@ model Sinal {
   disciplinaId    Int
   nome            String      @unique
   descricao       String
-  youtubeUrl      String // ALTERAÇÃO AQUI: 'videoUrl' renomeado para 'youtubeUrl'
+  youtubeUrl      String
   isActive        Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -101,16 +110,16 @@ model SinalProposto {
   avaliadorId          Int?
   nome                 String         @unique
   descricao            String
-  videoBrutoUrl        String // ALTERAÇÃO AQUI: 'videoUrl' renomeado para 'videoBrutoUrl'
+  videoBrutoUrl        String
   comentariosAvaliador String?
   status               PropostaStatus @default(PENDENTE)
   createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  updatedAt            DateTime       @updatedAt 
 
   disciplina Disciplina @relation(fields: [disciplinaId], references: [id])
-  proposer   Usuario    @relation("SinaisPropostos", fields: [proposerId], references: [id])
-  avaliador  Usuario?   @relation("SinaisAvaliados", fields: [avaliadorId], references: [id])
-
+  proposer   Usuario    @relation("SinaisPropostos", fields: [proposerId], references:[id])
+  avaliador  Usuario?   @relation("SinaisAvaliados", fields: [avaliadorId], references:[id])
+  
   Sinal      Sinal?
 }
 
@@ -119,8 +128,49 @@ model SinalFavorito {
   sinalId   Int
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
-  sinal   Sinal   @relation(fields: [sinalId], references: [id])
+  sinal   Sinal   @relation(fields: [sinalId],  references: [id])
 
   @@id([usuarioId, sinalId])
+}
+
+// NOVO ENUM para o status das solicitações
+enum SolicitacaoStatus {
+  PENDENTE
+  APROVADO
+  REJEITADO
+}
+
+// NOVO MODELO: Para solicitações de cadastro de novas instituições
+model SolicitacaoInstituicao {
+  id                                  Int               @id @default(autoincrement())
+  usuarioId                           Int
+  nomeInstituicao                     String
+  cidade                              String
+  estado                              String
+  nomeRepresentante                   String
+  cargoRepresentante                  String
+  documentoComprovativoUsuarioUrl     String
+  documentoComprovativoRepresentanteUrl String
+  status                              SolicitacaoStatus @default(PENDENTE)
+  adminFeedback                       String?
+  createdAt                           DateTime          @default(now())
+  updatedAt                           DateTime          @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+// NOVO MODELO: Para solicitações de vínculo a instituições existentes
+model SolicitacaoVinculo {
+  id                        Int               @id @default(autoincrement())
+  usuarioId                 Int
+  instituicaoId             Int
+  documentoComprovativoUrl  String
+  status                    SolicitacaoStatus @default(PENDENTE)
+  adminFeedback             String?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  usuario     Usuario     @relation(fields: [usuarioId], references: [id])
+  instituicao Instituicao @relation(fields: [instituicaoId], references: [id])
 }
 // [FIM DO CÓDIGO]
