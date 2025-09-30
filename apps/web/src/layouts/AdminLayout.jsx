@@ -1,7 +1,7 @@
 // apps/web/src/layouts/AdminLayout.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, UsersRound, BookOpen, Settings, Menu, LogOut, UserCircle } from 'lucide-react';
+import { LayoutDashboard, Users, UsersRound, BookOpen, Settings, Menu, LogOut, UserCircle, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 // 1. Importe a sua logo a partir da pasta de assets
@@ -43,6 +43,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </NavLink>
           <NavLink to="/admin/evaluators" className={({ isActive }) => `flex items-center py-2 px-3 rounded text-blue-100 ${isActive ? 'bg-brand-blue-dark font-semibold' : 'hover:bg-brand-blue-dark'}`}>
             <UsersRound size={20} className="mr-3" /> Gerir Avaliadores
+          </NavLink>
+          <NavLink to="/admin/institutions" className={({ isActive }) => `flex items-center py-2 px-3 rounded text-blue-100 ${isActive ? 'bg-brand-blue-dark font-semibold' : 'hover:bg-brand-blue-dark'}`}>
+            <Building2 size={20} className="mr-3" /> Gerir Instituições
           </NavLink>
           <NavLink to="/admin/sinais" className={({ isActive }) => `flex items-center py-2 px-3 rounded text-blue-100 ${isActive ? 'bg-brand-blue-dark font-semibold' : 'hover:bg-brand-blue-dark'}`}>
             <BookOpen size={20} className="mr-3" /> Consultar Sinais
