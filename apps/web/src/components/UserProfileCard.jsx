@@ -2,7 +2,6 @@ import React from 'react';
 import { Mail, Building, Edit } from 'lucide-react';
 
 const UserProfileCard = ({ user, onEditProfile }) => {
-  // Se o usuário ainda não foi carregado, exibe um placeholder
   if (!user) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center animate-pulse">
@@ -13,19 +12,21 @@ const UserProfileCard = ({ user, onEditProfile }) => {
     );
   }
 
-  const { nome, email, instituicao } = user;
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=0D83FF&color=fff&size=128`;
+  const { nome, email, instituicao, avatarUrl } = user;
+  const displayAvatarUrl = avatarUrl 
+    ? `http://localhost:3000/${avatarUrl}`
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(nome || '')}&background=31487A&color=fff&size=128`;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 text-brand-text-primary">
       <div className="flex flex-col items-center text-center">
         <img 
-          src={avatarUrl}
+          src={displayAvatarUrl}
           alt={`Avatar de ${nome}`}
-          className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-sm"
+          className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-sm object-cover"
         />
         <h2 className="text-xl font-bold text-gray-900">{nome}</h2>
-        <p className="text-sm text-gray-500 mt-1">Membro desde 2024</p>
+        <p className="text-sm text-gray-500 mt-1">Membro desde {new Date(user.createdAt).getFullYear()}</p>
       </div>
 
       <hr className="my-6" />
