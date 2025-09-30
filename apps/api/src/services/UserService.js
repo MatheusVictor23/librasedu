@@ -18,13 +18,25 @@ const getById = async (id) => {
   });
 };
 
+const getProfileById = async (id) => {
+  return prisma.usuario.findUnique({
+    where: { id: parseInt(id) },
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
 const create = async (userData) => {
   const hashedPassword = await bcrypt.hash(userData.senha, 10);
+  // Garante que o idInstituicao seja nulo se não for fornecido
+  const dataToCreate = {
+    ...userData,
+    senha: hashedPassword,
+    idInstituicao: userData.idInstituicao ? parseInt(userData.idInstituicao, 10) : null,
+  };
   return prisma.usuario.create({
-    data: {
-      ...userData,
-      senha: hashedPassword,
-    },
+    data: dataToCreate,
   });
 };
 
@@ -38,20 +50,22 @@ const update = async (id, userData) => {
   });
 };
 
-/**
- * NOVO: Atualiza o perfil do usuário autenticado.
- * Apenas campos não-sensíveis (como nome) são permitidos aqui.
- * @param {number} userId O ID do usuário extraído do token.
- * @param {object} data Os dados a serem atualizados.
- */
 const updateProfile = async (userId, data) => {
-    const { nome } = data; // Por enquanto, permite apenas a atualização do nome.
-    if (!nome || !nome.trim()) {
-        throw new Error('O campo nome é obrigatório.');
+    const allowedUpdates = {};
+    if (data.nome && data.nome.trim()) {
+        allowedUpdates.nome = data.nome.trim();
     }
+    if (data.avatarUrl) {
+        allowedUpdates.avatarUrl = data.avatarUrl;
+    }
+
+    if (Object.keys(allowedUpdates).length === 0) {
+        throw new Error('Nenhum dado válido para atualização foi fornecido.');
+    }
+
     return prisma.usuario.update({
         where: { id: parseInt(userId) },
-        data: { nome },
+        data: allowedUpdates,
     });
 };
 
@@ -178,7 +192,7 @@ export default {
   getById,
   create,
   update,
-  updateProfile, // Exporta a nova função
+  updateProfile,
   remove,
   getAllEvaluators,
   createEvaluator,
@@ -187,5 +201,6 @@ export default {
   getUsersByRole,
   getUserStats,
   getFavoritedSinais,
-  getSubmittedProposals
+  getSubmittedProposals,
+  getProfileById
 };
