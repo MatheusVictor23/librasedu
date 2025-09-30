@@ -1,43 +1,45 @@
-// [INÍCIO DO CÓDIGO]
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Garante que o diretório de uploads exista
 const uploadDir = 'uploads/';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Configuração de armazenamento do Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // Salva os arquivos na pasta 'uploads/'
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Cria um nome de arquivo único para evitar conflitos
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-// Filtro para aceitar apenas arquivos de vídeo
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('video/')) {
+const fileFilter = (allowedMimes) => (req, file, cb) => {
+  if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Formato de arquivo não suportado! Por favor, envie apenas vídeos.'), false);
+    cb(new Error('Formato de arquivo não suportado!'), false);
   }
 };
 
-// Configuração do Multer com limites de tamanho
-const upload = multer({
+export const uploadVideo = multer({
   storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 50 * 1024 * 1024 // Limite de 50MB por arquivo
-  }
+  fileFilter: fileFilter(['video/mp4', 'video/quicktime', 'video/webm']),
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-export default upload;
-// [FIM DO CÓDIGO]
+export const uploadDocument = multer({
+  storage: storage,
+  fileFilter: fileFilter(['image/jpeg', 'image/png', 'application/pdf']),
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
+
+// NOVO: Middleware para upload de avatar
+export const uploadAvatar = multer({
+  storage: storage,
+  fileFilter: fileFilter(['image/jpeg', 'image/png', 'image/gif']),
+  limits: { fileSize: 5 * 1024 * 1024 } // Limite de 5MB
+});
