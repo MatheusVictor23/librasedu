@@ -27,10 +27,11 @@ export const getUserById = async (req, res) => {
 export const createUser = async (req, res) => {
     try {
         const { idInstituicao, nome, cpf, email, senha, role } = req.body;
-        const newUser = await UserService.create({ idInstituicao, nome, cpf, email, senha, role });
+        const avatarUrl = req.file ? req.file.path : null; 
+        const newUser = await UserService.create({ idInstituicao, nome, cpf, email, senha, role, avatarUrl });
         res.status(201).json(newUser);
     } catch (error) {
-        res.status(400).json({ error: 'Não foi possível criar o usuário.', details: error.message });
+        res.status(400).json({ error: 'Não foi possível criar o utilizador.', details: error.message });
     }
 };
 
@@ -43,18 +44,30 @@ export const updateUser = async (req, res) => {
     }
 };
 
-/**
- * NOVO: Controlador para o usuário autenticado atualizar o seu próprio perfil.
- */
 export const updateProfile = async (req, res) => {
     try {
-        // O ID do usuário é obtido de forma segura a partir do token (injetado pelo middleware 'protect')
-        const updatedUser = await UserService.updateProfile(req.user.id, req.body);
-        // Retorna apenas os dados não-sensíveis do usuário atualizado
+        const data = { ...req.body };
+        if (req.file) {
+            data.avatarUrl = req.file.path;
+        }
+        const updatedUser = await UserService.updateProfile(req.user.id, data);
         const { senha: _, ...userWithoutPassword } = updatedUser;
         res.json(userWithoutPassword);
     } catch (error) {
         res.status(400).json({ error: 'Não foi possível atualizar o perfil.', details: error.message });
+    }
+};
+
+export const getMyProfile = async (req, res) => {
+    try {
+        const userProfile = await UserService.getProfileById(req.user.id);
+        if (!userProfile) {
+            return res.status(404).json({ error: 'Perfil do utilizador não encontrado.' });
+        }
+        const { senha: _, ...userWithoutPassword } = userProfile;
+        res.json(userWithoutPassword);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar o perfil do utilizador.', details: error.message });
     }
 };
 
@@ -85,8 +98,6 @@ export const createEvaluator = async (req, res) => {
         res.status(400).json({ error: 'Não foi possível criar o avaliador.', details: error.message });
     }
 };
-
-// ... (restante das funções do controlador sem alteração)
 
 export const getAllInstituicoes = async (req, res) => {
     try {
