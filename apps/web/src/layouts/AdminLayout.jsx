@@ -51,12 +51,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <BookOpen size={20} className="mr-3" /> Consultar Sinais
           </NavLink>
         </nav>
-        {/* 3. Nova secção inferior para preencher o espaço vazio */}
-        <div className="p-4 border-t border-brand-blue-dark">
-            <NavLink to="/admin/settings" className={({ isActive }) => `flex items-center py-2 px-3 rounded text-blue-100 ${isActive ? 'bg-brand-blue-dark font-semibold' : 'hover:bg-brand-blue-dark'}`}>
-                <Settings size={20} className="mr-3" /> Definições
-            </NavLink>
-        </div>
       </div>
       {/* Overlay para ecrãs móveis */}
       {isOpen && <div className="fixed inset-0 bg-black opacity-50 z-30 lg:hidden" onClick={() => setIsOpen(false)}></div>}
