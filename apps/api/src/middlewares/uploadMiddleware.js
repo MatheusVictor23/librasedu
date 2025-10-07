@@ -1,14 +1,17 @@
+// apps/api/src/middlewares/uploadMiddleware.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
 const uploadDir = 'uploads/';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
 
+// Lógica de armazenamento com criação de diretório garantida
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    // --- ALTERAÇÃO PRINCIPAL AQUI ---
+    // Garante que o diretório de upload exista antes de salvar o arquivo.
+    // A opção { recursive: true } evita erros se o diretório já existir.
+    fs.mkdirSync(uploadDir, { recursive: true });
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -37,9 +40,8 @@ export const uploadDocument = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-// NOVO: Middleware para upload de avatar
 export const uploadAvatar = multer({
   storage: storage,
   fileFilter: fileFilter(['image/jpeg', 'image/png', 'image/gif']),
-  limits: { fileSize: 5 * 1024 * 1024 } // Limite de 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }
 });

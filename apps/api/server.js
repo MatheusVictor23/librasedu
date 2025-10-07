@@ -10,7 +10,11 @@ const __dirname = path.dirname(__filename); // 2. Obter o diretório do arquivo 
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: '*', 
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+}));
 
 // 3. Servir os arquivos estáticos da pasta 'uploads'
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
