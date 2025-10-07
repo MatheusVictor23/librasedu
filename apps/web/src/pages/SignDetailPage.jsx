@@ -1,40 +1,67 @@
+// apps/web/src/pages/SignDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Bookmark, Share2, Play, ChevronDown, User } from 'lucide-react';
+// 1. Adicionado MessageSquare para o ícone de comentários
+import { ArrowLeft, Bookmark, Share2, Play, Heart, User, ChevronDown, MessageSquare } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
 import api from '../api/axiosConfig';
+import { useAuth } from '../context/AuthContext'; // 2. Importado useAuth para pegar o user atual
 
 const SignDetailPage = () => {
   const { id } = useParams();
+  const { user } = useAuth(); // Obter o utilizador autenticado para a foto de perfil
   const [sign, setSign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
+  // Estados para likes e saves
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // NOVO: Estados para comentários
+  const [comentarios, setComentarios] = useState([]);
+  const [novoComentario, setNovoComentario] = useState('');
+  const [comentarioLoading, setComentarioLoading] = useState(false);
+
   // Dados mockados para a seção "Outros Sinais", pois a API ainda não fornece isso.
+  // Em uma implementação real, você buscaria sinais do mesmo proponente ou categoria.
   const [authorSigns, setAuthorSigns] = useState([
     { id: 2, nome: 'Banco de dados', categoria: 'Tecnologia e Computação' },
     { id: 3, nome: 'Programação', categoria: 'Tecnologia e Computação' },
     { id: 4, nome: 'Algoritmo', categoria: 'Tecnologia e Computação' }
   ]);
-  const [selectedCategory, setSelectedCategory] = useState('Tecnologia e Computação');
   
-  useEffect(() => {
-    const fetchSignDetails = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get(`/sinais/${id}`);
-        setSign(response.data);
-      } catch (err) {
-        console.error("Erro ao buscar detalhes do sinal:", err);
-        setError("Não foi possível carregar o sinal. Tente novamente mais tarde.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Função para buscar todos os dados do sinal e comentários
+  const fetchSignDetails = async () => {
+    setLoading(true);
+    try {
+      const [signRes, comentariosRes] = await Promise.all([
+        api.get(`/sinais/${id}`),
+        api.get(`/sinais/${id}/comentarios`)
+      ]);
+      
+      const fetchedSign = signRes.data;
+      setSign(fetchedSign);
+      setComentarios(comentariosRes.data); // Define os comentários
 
+      // Inicializa os estados de interação com os dados da API
+      setIsLiked(fetchedSign.isLiked);
+      setLikeCount(fetchedSign._count?.curtidas || 0);
+      setIsSaved(fetchedSign.isSaved);
+
+    } catch (err) {
+      console.error("Erro ao buscar detalhes do sinal:", err);
+      setError("Não foi possível carregar o sinal. Tente novamente mais tarde.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSignDetails();
-  }, [id]);
+  }, [id]); // Depende do ID do sinal para refetch
 
   const getYouTubeVideoId = (url) => {
     if (!url) return null;
@@ -43,18 +70,76 @@ const SignDetailPage = () => {
     return match ? match[1] : null;
   };
   
-  // CORREÇÃO AQUI: Usa 'youtubeUrl' em vez de 'videoUrl'
   const videoId = getYouTubeVideoId(sign?.youtubeUrl);
   const videoThumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '/api/placeholder/600/400';
 
   const handleVideoPlay = () => {
     setIsVideoPlaying(true);
   };
+
+  const handleLike = async () => {
+    // Atualização otimista da UI
+    const originalIsLiked = isLiked;
+    const originalLikeCount = likeCount;
+
+    setIsLiked(!originalIsLiked);
+    setLikeCount(originalIsLiked ? originalLikeCount - 1 : originalLikeCount + 1);
+
+    try {
+      if (originalIsLiked) {
+        await api.delete(`/sinais/${id}/like`);
+      } else {
+        await api.post(`/sinais/${id}/like`);
+      }
+    } catch (error) {
+      console.error("Erro ao curtir o sinal:", error);
+      // Reverte a UI em caso de erro na API
+      setIsLiked(originalIsLiked);
+      setLikeCount(originalLikeCount);
+      alert('Ocorreu um erro ao curtir/descurtir. Tente novamente.');
+    }
+  };
+
+  const handleSave = async () => {
+    const originalIsSaved = isSaved;
+    setIsSaved(!originalIsSaved);
+
+    try {
+      if (originalIsSaved) {
+        await api.delete(`/sinais/${id}/save`);
+      } else {
+        await api.post(`/sinais/${id}/save`);
+      }
+    } catch (error) {
+      console.error("Erro ao guardar o sinal:", error);
+      setIsSaved(originalIsSaved);
+      alert('Ocorreu um erro ao guardar/desguardar. Tente novamente.');
+    }
+  };
+
+  // NOVO: Handler para submeter um novo comentário
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!novoComentario.trim()) return; // Não envia comentários vazios
+    
+    setComentarioLoading(true);
+    try {
+      const response = await api.post(`/sinais/${id}/comentarios`, { texto: novoComentario });
+      // Adiciona o novo comentário no topo da lista para uma atualização instantânea da UI
+      setComentarios([response.data, ...comentarios]);
+      setNovoComentario(''); // Limpa o campo de texto
+    } catch (error) {
+      console.error("Erro ao enviar comentário:", error);
+      alert('Não foi possível enviar o seu comentário.');
+    } finally {
+      setComentarioLoading(false);
+    }
+  };
   
   if (loading) {
     return (
       <MainLayout>
-        <div className="container mx-auto max-w-6xl px-4 py-8 text-center">Carregando...</div>
+        <div className="container mx-auto max-w-6xl px-4 py-8 text-center">A carregar...</div>
       </MainLayout>
     );
   }
@@ -111,22 +196,32 @@ const SignDetailPage = () => {
 
             <div className="mb-6">
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">{sign.nome}</h1>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
                 <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                    <User size={20} className="text-gray-600" />
-                  </div>
+                   {/* 3. Renderiza o avatar do proponente */}
+                   {sinalProposto?.proposer?.avatarUrl ? (
+                        <img src={`http://localhost:3000/${sinalProposto.proposer.avatarUrl}`} alt={sinalProposto.proposer.nome} className="w-10 h-10 rounded-full object-cover mr-3" />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                            <User size={20} className="text-gray-600" />
+                        </div>
+                    )}
                   <div>
                     <h3 className="font-semibold text-gray-900">{sinalProposto?.proposer?.nome || 'Autor desconhecido'}</h3>
                     <p className="text-sm text-gray-600">{sinalProposto?.proposer?.instituicao?.nome || 'Instituição não informada'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <Bookmark size={16} /> <span>Salvar</span>
+                  <button onClick={handleLike} className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${isLiked ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                    <Heart size={16} className={`${isLiked ? 'fill-current' : ''}`} />
+                    <span>{likeCount}</span>
                   </button>
-                  <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <Share2 size={16} /> <span>Compartilhar</span>
+                  <button onClick={handleSave} className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${isSaved ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                    <Bookmark size={16} className={`${isSaved ? 'fill-current' : ''}`} />
+                    <span>{isSaved ? 'Guardado' : 'Guardar'}</span>
+                  </button>
+                  <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium">
+                    <Share2 size={16} /> <span>Partilhar</span>
                   </button>
                 </div>
               </div>
@@ -134,27 +229,62 @@ const SignDetailPage = () => {
                 Publicado em: {new Date(sign.createdAt).toLocaleDateString('pt-BR')}
               </p>
             </div>
-
+            
+            {/* --- NOVA SECÇÃO DE COMENTÁRIOS --- */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Comentários dos avaliadores</h3>
-              {sinalProposto?.avaliador ? (
-                <div className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0 mb-4 last:mb-0">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                      <User size={16} className="text-gray-600" />
-                    </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <MessageSquare size={20} /> Comentários ({comentarios.length})
+                </h3>
+
+                {/* Formulário para novo comentário */}
+                <form onSubmit={handleCommentSubmit} className="flex items-start space-x-4 mb-6">
+                    {/* Renderiza o avatar do utilizador logado para o formulário de comentário */}
+                    {user?.avatarUrl ? (
+                        <img src={`http://localhost:3000/${user.avatarUrl}`} alt={user.nome} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <User size={20} className="text-gray-600" />
+                        </div>
+                    )}
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium text-gray-900">{sinalProposto.avaliador.nome}</span>
-                        <span className="text-sm text-gray-500">{new Date(sinalProposto.updatedAt).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                      <p className="text-gray-700">{sinalProposto.comentariosAvaliador || 'Sinal aprovado.'}</p>
+                        <textarea
+                            value={novoComentario}
+                            onChange={(e) => setNovoComentario(e.target.value)}
+                            placeholder="Adicione um comentário..."
+                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                            rows="2"
+                            disabled={comentarioLoading} // Desabilita enquanto envia
+                        />
+                        <button type="submit" disabled={comentarioLoading} className="mt-2 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-md hover:bg-brand-blue-dark disabled:bg-gray-400">
+                            {comentarioLoading ? 'A enviar...' : 'Comentar'}
+                        </button>
                     </div>
-                  </div>
+                </form>
+
+                {/* Lista de comentários */}
+                <div className="space-y-4">
+                    {comentarios.length > 0 ? comentarios.map(comentario => (
+                        <div key={comentario.id} className="flex items-start space-x-4">
+                            {/* Renderiza o avatar do autor do comentário */}
+                            {comentario.usuario.avatarUrl ? (
+                                <img src={`http://localhost:3000/${comentario.usuario.avatarUrl}`} alt={comentario.usuario.nome} className="w-10 h-10 rounded-full object-cover" />
+                            ) : (
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <User size={20} className="text-gray-600" />
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-sm">{comentario.usuario.nome}</span>
+                                    <span className="text-xs text-gray-500">{new Date(comentario.createdAt).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                                <p className="text-gray-700 text-sm">{comentario.texto}</p>
+                            </div>
+                        </div>
+                    )) : (
+                        <p className="text-center text-gray-500 py-4">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+                    )}
                 </div>
-              ) : (
-                <p className="text-gray-600">Nenhum comentário de avaliação disponível.</p>
-              )}
             </div>
           </div>
 
@@ -168,16 +298,14 @@ const SignDetailPage = () => {
               <p className="text-gray-700">{sign.disciplina.nome}</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Outros de {sinalProposto?.proposer?.nome}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Outros de {sinalProposto?.proposer?.nome || 'Autor'}</h3>
               <div className="mb-4 relative">
-                <button className="w-full bg-brand-blue text-white px-4 py-2 rounded-lg flex items-center justify-between">
+                <button className="w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-lg flex items-center justify-between hover:bg-gray-200 transition-colors">
                   <span>Classificar por</span> <ChevronDown size={16} />
                 </button>
               </div>
               <div className="space-y-4">
-                <div className="bg-brand-blue text-white p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">{selectedCategory}</h4>
-                </div>
+                {/* Aqui você pode buscar sinais relacionados via API, se implementado */}
                 {authorSigns.map((authorSign) => (
                   <Link key={authorSign.id} to={`/sinal/${authorSign.id}`} className="block bg-gray-100 rounded-lg p-3 hover:bg-gray-200 transition-colors">
                     <div className="flex items-center space-x-3">
