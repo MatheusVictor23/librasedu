@@ -70,11 +70,19 @@ model Curso {
   updatedAt         DateTime           @updatedAt()
 }
 
+enum StatusDisciplina {
+  PENDENTE
+  APROVADO
+}
+
 model Disciplina {
   id              Int             @id @default(autoincrement())
   idCurso         Int
   nome            String          @unique
   cargaHoraria    String
+  
+  status          StatusDisciplina @default(APROVADO)
+
   sinais          Sinal[]
   sinaisPropostos SinalProposto[]
   createdAt       DateTime        @default(now())

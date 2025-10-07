@@ -64,6 +64,9 @@ const getPendingProposals = async () => {
   return prisma.sinalProposto.findMany({
     where: {
       status: 'PENDENTE',
+      disciplina: {
+        status: 'APROVADO',
+      },
     },
     include: {
       proposer: { select: { nome: true } },

@@ -18,6 +18,7 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import AdminEvaluatorsPage from './pages/AdminEvaluatorsPage';
 import AdminSinaisPage from './pages/AdminSinaisPage';
 import AdminInstitutionsPage from './pages/AdminInstitutionsPage';
+import AdminDisciplinasPage from './pages/AdminDisciplinasPage';
 import ApprovedProposalsPage from './pages/ApprovedProposalsPage';
 import RejectedProposalsPage from './pages/RejectedProposalsPage';
 import SubmitSignPage from './pages/SubmitSignPage';
@@ -63,6 +64,7 @@ function App() {
       <Route path='/admin/users' element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
       <Route path='/admin/evaluators' element={<ProtectedRoute><AdminEvaluatorsPage /></ProtectedRoute>} />
       <Route path='/admin/institutions' element={<ProtectedRoute><AdminInstitutionsPage /></ProtectedRoute>} />
+      <Route path='/admin/disciplinas' element={<ProtectedRoute><AdminDisciplinasPage /></ProtectedRoute>} />
       <Route path='/admin/sinais' element={<ProtectedRoute><AdminSinaisPage /></ProtectedRoute>} />
 
       {/* --- Rota do Avaliador Protegida --- */}

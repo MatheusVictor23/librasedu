@@ -3,6 +3,7 @@ import SinalController from '../controllers/SinalController.js';
 import SinalPropostoController from '../controllers/SinalPropostoController.js';
 import SolicitacaoController from '../controllers/SolicitacaoController.js'; 
 import InstituicaoController from '../controllers/InstituicaoController.js';
+import DisciplinaController from '../controllers/DisciplinaController.js';
 import { 
     getAllUsers, 
     getUserById,
@@ -44,11 +45,17 @@ router.delete('/users/:id', deleteUser);
 router.get('/evaluators', getAllEvaluators);
 router.post('/evaluators', createEvaluator);
 
+// ROTAS DE GESTÃO DE DISCIPLINAS
+router.get('/disciplinas', DisciplinaController.getAllDisciplinasForAdmin);
+router.post('/disciplinas/:id/manage', DisciplinaController.manageDisciplina);
+
 // Rotas de Gestão de Instituições
 router.get('/instituicoes', getAllInstituicoes);
 router.post('/instituicoes', InstituicaoController.createInstituicao);
 router.put('/instituicoes/:id', InstituicaoController.updateInstituicao);
 router.delete('/instituicoes/:id', InstituicaoController.deleteInstituicao);
+
+
 
 // Rotas de Gestão de Sinais e Propostas
 router.get('/sinais-propostos', getAllSinaisPropostos);
