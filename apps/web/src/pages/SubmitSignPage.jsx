@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import api from '../api/axiosConfig';
-import { FileUp, Info } from 'lucide-react'; // Ícones para a interface
+import { FileUp, Info } from 'lucide-react';
 
 const SubmitSignPage = () => {
   const [formData, setFormData] = useState({
@@ -10,9 +10,10 @@ const SubmitSignPage = () => {
     descricao: '',
     disciplinaId: ''
   });
-  const [videoFile, setVideoFile] = useState(null); // NOVO: Estado para armazenar o arquivo de vídeo
+  const [videoFile, setVideoFile] = useState(null);
   
   const [disciplinas, setDisciplinas] = useState([]);
+  // NOVO: Estados para controlar o formulário de nova disciplina
   const [showNewDisciplinaForm, setShowNewDisciplinaForm] = useState(false);
   const [newDisciplina, setNewDisciplina] = useState({ nome: '', cargaHoraria: 'A definir' });
   
@@ -20,6 +21,8 @@ const SubmitSignPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // A função para buscar as disciplinas existentes. Após cadastrar uma nova,
+  // vamos chamá-la de novo para manter a lista atualizada.
   const fetchDisciplinas = () => {
     api.get('/disciplinas')
       .then(response => setDisciplinas(response.data))
@@ -38,7 +41,6 @@ const SubmitSignPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  // NOVO: Handler para o input de arquivo
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -53,21 +55,25 @@ const SubmitSignPage = () => {
         return;
       }
       setVideoFile(file);
-      setError(''); // Limpa o erro se o arquivo for válido
+      setError('');
     }
   };
 
+  // NOVO: Handler para a seleção de disciplina
   const handleDisciplinaChange = (e) => {
     const { value } = e.target;
     if (value === 'new') {
+      // Se o usuário escolher "+ Cadastrar nova...", mostramos o formulário
       setShowNewDisciplinaForm(true);
       setFormData(prev => ({ ...prev, disciplinaId: '' }));
     } else {
+      // Caso contrário, escondemos o formulário e usamos a disciplina selecionada
       setShowNewDisciplinaForm(false);
       setFormData(prev => ({ ...prev, disciplinaId: value }));
     }
   };
 
+  // NOVO: Handler para o input do nome da nova disciplina
   const handleNewDisciplinaChange = (e) => {
     const { name, value } = e.target;
     setNewDisciplina(prev => ({ ...prev, [name]: value }));
@@ -79,24 +85,28 @@ const SubmitSignPage = () => {
     setError('');
     setSuccess('');
 
-    // Validação para garantir que um vídeo foi selecionado
     if (!videoFile) {
         setError('Por favor, selecione um arquivo de vídeo para enviar.');
         setIsLoading(false);
         return;
     }
 
+    // Variável para armazenar o ID da disciplina final (seja ela existente ou nova)
     let finalDisciplinaId = formData.disciplinaId;
 
     try {
+      // ATUALIZADO: Lógica para criar a disciplina antes de submeter o sinal
       if (showNewDisciplinaForm) {
         if (!newDisciplina.nome.trim()) {
           setError('O nome da nova disciplina é obrigatório.');
           setIsLoading(false);
           return;
         }
+        // 1. Cria a nova disciplina
         const response = await api.post('/disciplinas', newDisciplina);
+        // 2. Guarda o ID da disciplina recém-criada
         finalDisciplinaId = response.data.id;
+        // 3. Atualiza a lista de disciplinas no select para futuros envios
         fetchDisciplinas();
       }
 
@@ -106,23 +116,21 @@ const SubmitSignPage = () => {
         return;
       }
 
-      // NOVO: Usar FormData para enviar arquivo e dados
       const submissionData = new FormData();
       submissionData.append('nome', formData.nome);
       submissionData.append('descricao', formData.descricao);
       submissionData.append('disciplinaId', finalDisciplinaId);
-      submissionData.append('video', videoFile); // O nome 'video' deve corresponder ao do middleware
+      submissionData.append('video', videoFile);
 
-      // O Axios definirá automaticamente o Content-Type como multipart/form-data
+      // 4. Cria a proposta de sinal usando o ID da disciplina correta
       await api.post('/sinais-propostos', submissionData);
       setSuccess('Proposta de sinal enviada com sucesso! Obrigado pela sua contribuição.');
       
-      // Limpa o formulário
+      // Limpa o formulário por completo
       setFormData({ nome: '', descricao: '', disciplinaId: '' });
       setVideoFile(null);
       setNewDisciplina({ nome: '', cargaHoraria: 'A definir' });
       setShowNewDisciplinaForm(false);
-      // Limpa o input de arquivo
       document.getElementById('video-upload').value = null;
 
     } catch (err) {
@@ -147,26 +155,40 @@ const SubmitSignPage = () => {
                 <input type="text" name="nome" value={formData.nome} onChange={handleInputChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
               </div>
               
+              {/* ATUALIZADO: O select agora tem um onChange e a nova opção */}
               <div>
                 <label htmlFor="disciplinaId" className="block text-sm font-medium text-gray-700">Disciplina</label>
-                <select name="disciplinaId" value={formData.disciplinaId} onChange={handleDisciplinaChange} required={!showNewDisciplinaForm} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                <select 
+                  name="disciplinaId" 
+                  value={showNewDisciplinaForm ? 'new' : formData.disciplinaId} 
+                  onChange={handleDisciplinaChange} 
+                  required={!showNewDisciplinaForm} 
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                >
                   <option value="">Selecione uma disciplina</option>
                   {disciplinas.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
                   <option value="new">+ Cadastrar nova disciplina</option>
                 </select>
               </div>
 
+              {/* NOVO: Formulário condicional para a nova disciplina */}
               {showNewDisciplinaForm && (
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 animate-fade-in">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Nova Disciplina</h3>
                   <div>
-                    <label htmlFor="newDisciplinaNome" className="block text-sm font-medium text-gray-700">Nome da Disciplina</label>
-                    <input type="text" name="nome" value={newDisciplina.nome} onChange={handleNewDisciplinaChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
+                    <label htmlFor="newDisciplinaNome" className="block text-sm font-medium text-gray-700">Nome da Disciplina *</label>
+                    <input 
+                      type="text" 
+                      name="nome" 
+                      value={newDisciplina.nome} 
+                      onChange={handleNewDisciplinaChange} 
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
+                      required 
+                    />
                   </div>
                 </div>
               )}
               
-              {/* NOVO: Bloco de Upload de Vídeo */}
               <div>
                   <label htmlFor="video-upload" className="block text-sm font-medium text-gray-700 mb-2">Arquivo de Vídeo</label>
                   <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
@@ -184,7 +206,6 @@ const SubmitSignPage = () => {
                       </div>
                   </div>
                   
-                  {/* NOVO: Bloco de Instruções */}
                   <div className="mt-4 bg-blue-50 border-l-4 border-blue-400 p-4">
                       <div className="flex items-center">
                           <Info size={20} className="text-blue-600 mr-3" />
