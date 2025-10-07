@@ -1,8 +1,20 @@
+
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import taipiriImg from "../assets/taipiriLogin.png";
 import { UserCircle } from 'lucide-react';
+// Importar o arquivo CSS de animações (assumindo que será integrado ao projeto)
+// import '../animations.css'; 
+
+const AnimatedBackgroundBlobs = () => (
+  <>
+    <div className="absolute top-10 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob-spin-1"></div>
+    <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob-move-1"></div>
+    <div className="absolute top-5 right-20 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-blob-spin-2 delay-1000"></div>
+    <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-35 animate-blob-move-2 delay-2000"></div>
+  </>
+);
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -46,16 +58,26 @@ const RegisterPage = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.nome.trim()) newErrors.nome = 'Nome é obrigatório';
-    if (!formData.cpf.trim()) {
+    
+    // Validação de CPF
+    const cleanedCPF = formData.cpf.replace(/\D/g, '');
+    if (!cleanedCPF) {
       newErrors.cpf = 'CPF é obrigatório';
-    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) {
-      newErrors.cpf = 'CPF deve estar no formato XXX.XXX.XXX-XX';
+    } else if (cleanedCPF.length !== 11) {
+      newErrors.cpf = 'CPF deve ter 11 dígitos';
+    } else if (!/^[0-9]{11}$/.test(cleanedCPF)) {
+      newErrors.cpf = 'CPF inválido';
+    } else if (!validateCPFDigits(cleanedCPF)) {
+      newErrors.cpf = 'CPF inválido';
     }
+
+    // Validação de Email
     if (!formData.email.trim()) {
       newErrors.email = 'Email é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,6}$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
+
     if (!formData.senha) {
       newErrors.senha = 'Senha é obrigatória';
     } else if (formData.senha.length < 6) {
@@ -66,6 +88,29 @@ const RegisterPage = () => {
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Função de validação de dígitos do CPF (algoritmo)
+  const validateCPFDigits = (cpf) => {
+    let sum = 0;
+    let remainder;
+
+    if (cpf === '00000000000') return false;
+
+    for (let i = 1; i <= 9; i++) sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    remainder = (sum * 10) % 11;
+
+    if ((remainder === 10) || (remainder === 11)) remainder = 0;
+    if (remainder !== parseInt(cpf.substring(9, 10))) return false;
+
+    sum = 0;
+    for (let i = 1; i <= 10; i++) sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    remainder = (sum * 10) % 11;
+
+    if ((remainder === 10) || (remainder === 11)) remainder = 0;
+    if (remainder !== parseInt(cpf.substring(10, 11))) return false;
+
+    return true;
   };
 
   const handleSubmit = async (e) => {
@@ -115,11 +160,18 @@ const RegisterPage = () => {
   };
 
   const formatCPF = (value) => {
-    return value.replace(/\D/g, '')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-      .substring(0, 14);
+    const cleaned = value.replace(/\D/g, '');
+    let formatted = cleaned;
+    if (cleaned.length > 3) {
+      formatted = cleaned.substring(0, 3) + '.' + cleaned.substring(3);
+    }
+    if (cleaned.length > 6) {
+      formatted = formatted.substring(0, 7) + '.' + cleaned.substring(6);
+    }
+    if (cleaned.length > 9) {
+      formatted = formatted.substring(0, 11) + '-' + cleaned.substring(9);
+    }
+    return formatted.substring(0, 14);
   };
 
   const handleCPFChange = (e) => {
@@ -129,80 +181,79 @@ const RegisterPage = () => {
   
   return (
     <section className="bg-brand-background-light w-full min-h-screen flex flex-col md:flex-row">
-      {/* Lado Esquerdo - Imagem */}
-      <div className="relative w-full md:w-1/2 h-64 md:h-screen overflow-hidden hidden md:block">
-        <div className="absolute top-10 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40"></div>
-        <img src={taipiriImg} alt="Portal Tapiri" className="relative z-50 left-20" />
+      {/* Lado Esquerdo - Imagem e Animação */}
+      <div className="relative w-full md:w-1/2 h-64 md:h-screen overflow-hidden hidden md:flex items-center justify-center">
+        <AnimatedBackgroundBlobs />
+        <img src={taipiriImg} alt="Portal Tapiri" className="relative z-10 max-w-[70%] h-auto" /> {/* Aumentado para 70% */}
       </div>
 
       {/* Lado Direito - Formulário */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-8 md:p-12">
-        <div className="w-full max-w-lg bg-white px-8 md:px-12 py-8 rounded-3xl shadow-2xl shadow-slate-400">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-4 sm:p-8 md:p-10">
+        <div className="w-full max-w-md bg-white px-6 sm:px-8 md:px-10 py-8 rounded-3xl shadow-2xl shadow-slate-400"> {/* max-w-md e padding ajustados */}
           <div>
-            <h3 className="text-3xl md:text-4xl font-bold leading-tight text-brand-blue">Registe-se</h3>
-            <p className="mt-2 mb-6 text-base text-brand-text-secondary">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight text-brand-blue">Registe-se</h3>
+            <p className="mt-2 mb-4 sm:mb-6 text-sm sm:text-base text-brand-text-secondary">
               Já possui conta? <Link to="/login" className="underline text-brand-blue font-semibold">Login</Link>
             </p>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="flex flex-col items-center space-y-2">
               <label htmlFor="avatar-upload" className="cursor-pointer">
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="Preview" className="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
+                  <img src={avatarPreview} alt="Preview" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-200" />
                 ) : (
-                  <UserCircle size={96} className="text-gray-300" />
+                  <UserCircle size={80} className="text-gray-300 sm:size-24" />
                 )}
               </label>
               <input id="avatar-upload" name="avatar" type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-              <label htmlFor="avatar-upload" className="text-sm font-medium text-brand-blue hover:underline cursor-pointer">
+              <label htmlFor="avatar-upload" className="text-xs sm:text-sm font-medium text-brand-blue hover:underline cursor-pointer">
                 Escolher foto de perfil (opcional)
               </label>
             </div>
             
             <div>
-              <label htmlFor="nome" className="block text-sm font-medium text-gray-700">Nome Completo *</label>
-              <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleInputChange} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm ${errors.nome ? 'border-red-500' : 'border-gray-300'}`} placeholder="Digite o seu nome completo" required />
-              {errors.nome && <span className="text-sm text-red-600">{errors.nome}</span>}
+              <label htmlFor="nome" className="block text-xs sm:text-sm font-medium text-gray-700">Nome Completo *</label>
+              <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleInputChange} className={`w-full px-3 py-2 mt-1 border rounded-lg shadow-sm text-sm ${errors.nome ? 'border-red-500' : 'border-gray-300'}`} placeholder="Digite o seu nome completo" required />
+              {errors.nome && <span className="text-xs text-red-600">{errors.nome}</span>}
             </div>
             
             <div>
-              <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">CPF *</label>
-              <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleCPFChange} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm ${errors.cpf ? 'border-red-500' : 'border-gray-300'}`} placeholder="000.000.000-00" required />
-              {errors.cpf && <span className="text-sm text-red-600">{errors.cpf}</span>}
+              <label htmlFor="cpf" className="block text-xs sm:text-sm font-medium text-gray-700">CPF *</label>
+              <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleCPFChange} className={`w-full px-3 py-2 mt-1 border rounded-lg shadow-sm text-sm ${errors.cpf ? 'border-red-500' : 'border-gray-300'}`} placeholder="000.000.000-00" maxLength="14" required />
+              {errors.cpf && <span className="text-xs text-red-600">{errors.cpf}</span>}
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email *</label>
-              <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm ${errors.email ? 'border-red-500' : 'border-gray-300'}`} placeholder="seu@email.com" required />
-              {errors.email && <span className="text-sm text-red-600">{errors.email}</span>}
+              <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-700">Email *</label>
+              <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} className={`w-full px-3 py-2 mt-1 border rounded-lg shadow-sm text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'}`} placeholder="seu@email.com" required />
+              {errors.email && <span className="text-xs text-red-600">{errors.email}</span>}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label htmlFor="senha" className="block text-sm font-medium text-gray-700">Senha *</label>
-                <input type="password" id="senha" name="senha" value={formData.senha} onChange={handleInputChange} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm ${errors.senha ? 'border-red-500' : 'border-gray-300'}`} placeholder="Mínimo 6 caracteres" required />
-                {errors.senha && <span className="text-sm text-red-600">{errors.senha}</span>}
+                <label htmlFor="senha" className="block text-xs sm:text-sm font-medium text-gray-700">Senha *</label>
+                <input type="password" id="senha" name="senha" value={formData.senha} onChange={handleInputChange} className={`w-full px-3 py-2 mt-1 border rounded-lg shadow-sm text-sm ${errors.senha ? 'border-red-500' : 'border-gray-300'}`} placeholder="Mínimo 6 caracteres" required />
+                {errors.senha && <span className="text-xs text-red-600">{errors.senha}</span>}
               </div>
               
               <div>
-                <label htmlFor="confirmarSenha" className="block text-sm font-medium text-gray-700">Confirmar Senha *</label>
-                <input type="password" id="confirmarSenha" name="confirmarSenha" value={formData.confirmarSenha} onChange={handleInputChange} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm ${errors.confirmarSenha ? 'border-red-500' : 'border-gray-300'}`} placeholder="Confirme a sua senha" required />
-                {errors.confirmarSenha && <span className="text-sm text-red-600">{errors.confirmarSenha}</span>}
+                <label htmlFor="confirmarSenha" className="block text-xs sm:text-sm font-medium text-gray-700">Confirmar Senha *</label>
+                <input type="password" id="confirmarSenha" name="confirmarSenha" value={formData.confirmarSenha} onChange={handleInputChange} className={`w-full px-3 py-2 mt-1 border rounded-lg shadow-sm text-sm ${errors.confirmarSenha ? 'border-red-500' : 'border-gray-300'}`} placeholder="Confirme a sua senha" required />
+                {errors.confirmarSenha && <span className="text-xs text-red-600">{errors.confirmarSenha}</span>}
               </div>
             </div>
             
             {errors.submit && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-xs sm:text-sm">
                 {errors.submit}
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
+              <button type="button" onClick={onClose} className="flex-1 px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 Cancelar
               </button>
-              <button type="submit" className="flex-1 px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-50" disabled={isLoading}>
+              <button type="submit" className="flex-1 px-3 py-2 sm:px-4 sm:py-2 border border-transparent rounded-lg shadow-sm text-xs sm:text-sm font-medium text-white bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-50" disabled={isLoading}>
                 {isLoading ? 'A Registar...' : 'Registar'}
               </button>
             </div>
