@@ -3,24 +3,33 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../layouts/AdminLayout';
 import api from '../api/axiosConfig';
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
-import EvaluatorFormModal from '../components/admin/EvaluatorFormModal.jsx'; // 1. Importar o modal
+import EvaluatorFormModal from '../components/admin/EvaluatorFormModal.jsx';
+import InstitutionFormModal from '../components/admin/InstitutionFormModal'; // Importar o modal de instituições
 
 const AdminEvaluatorsPage = () => {
   const [evaluators, setEvaluators] = useState([]);
+  const [institutions, setInstitutions] = useState([]); // NOVO: Estado para armazenar as instituições
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // 2. Estados para controlar o modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEvaluatorModalOpen, setIsEvaluatorModalOpen] = useState(false);
   const [selectedEvaluator, setSelectedEvaluator] = useState(null);
 
-  const fetchEvaluators = async () => {
+  // NOVO: Estados para controlar o modal de instituição
+  const [isInstitutionModalOpen, setIsInstitutionModalOpen] = useState(false);
+
+  const fetchData = async () => {
+    // Agora carrega tanto avaliadores quanto instituições
     setLoading(true);
     try {
-      const response = await api.get('/admin/evaluators');
-      setEvaluators(response.data);
+      const [evaluatorsRes, institutionsRes] = await Promise.all([
+        api.get('/admin/evaluators'),
+        api.get('/instituicoes')
+      ]);
+      setEvaluators(evaluatorsRes.data);
+      setInstitutions(institutionsRes.data);
     } catch (err) {
-      setError('Não foi possível carregar os avaliadores.');
+      setError('Não foi possível carregar os dados.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -28,46 +37,71 @@ const AdminEvaluatorsPage = () => {
   };
 
   useEffect(() => {
-    fetchEvaluators();
+    fetchData();
   }, []);
 
   const handleDelete = async (evaluatorId) => {
     if (window.confirm('Tem a certeza de que quer apagar este avaliador?')) {
       try {
-        await api.delete(`/admin/evaluators/${evaluatorId}`);
-        setEvaluators(evaluators.filter(e => e.id !== evaluatorId));
+        // A rota correta para apagar utilizadores é /admin/users/:id
+        await api.delete(`/admin/users/${evaluatorId}`);
+        fetchData(); // Recarrega os dados para atualizar a lista
       } catch (err) {
         alert('Erro ao apagar o avaliador.');
       }
     }
   };
 
-  // 3. Funções para abrir/fechar e salvar o modal
-  const handleOpenModal = (evaluator = null) => {
+  // Funções para o modal de AVALIADOR
+  const handleOpenEvaluatorModal = (evaluator = null) => {
     setSelectedEvaluator(evaluator);
-    setIsModalOpen(true);
+    setIsEvaluatorModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseEvaluatorModal = () => {
+    setIsEvaluatorModalOpen(false);
     setSelectedEvaluator(null);
   };
 
-  const handleSave = () => {
-    handleCloseModal();
-    fetchEvaluators(); // Re-carrega os dados após salvar
+  const handleSaveEvaluator = () => {
+    handleCloseEvaluatorModal();
+    fetchData();
+  };
+
+  // NOVO: Funções para o modal de INSTITUIÇÃO
+  const handleOpenInstitutionModal = () => {
+    setIsInstitutionModalOpen(true);
+  };
+
+  const handleCloseInstitutionModal = () => {
+    setIsInstitutionModalOpen(false);
+  };
+
+  const handleSaveInstitution = () => {
+    handleCloseInstitutionModal();
+    fetchData(); // Recarrega os dados, atualizando a lista de instituições no outro modal
   };
 
   if (error) return <AdminLayout><p className="text-red-500">{error}</p></AdminLayout>;
 
   return (
     <AdminLayout>
-      {/* 4. Renderizar o modal condicionalmente */}
-      {isModalOpen && (
+      {/* Modal de Avaliador */}
+      {isEvaluatorModalOpen && (
         <EvaluatorFormModal 
           evaluator={selectedEvaluator} 
-          onClose={handleCloseModal}
-          onSave={handleSave}
+          institutions={institutions} // Passa a lista de instituições
+          onClose={handleCloseEvaluatorModal}
+          onSave={handleSaveEvaluator}
+          onAddNewInstitution={handleOpenInstitutionModal} // Passa a função para abrir o outro modal
+        />
+      )}
+
+      {/* NOVO: Modal de Instituição */}
+      {isInstitutionModalOpen && (
+        <InstitutionFormModal
+          onClose={handleCloseInstitutionModal}
+          onSave={handleSaveInstitution}
         />
       )}
       
@@ -75,7 +109,7 @@ const AdminEvaluatorsPage = () => {
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold text-brand-text-primary">Gestão de Avaliadores</h3>
           <button
-            onClick={() => handleOpenModal()} // Botão para adicionar
+            onClick={() => handleOpenEvaluatorModal()}
             className="flex items-center gap-2 bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-dark transition-colors text-sm font-medium"
           >
             <PlusCircle size={18} />
@@ -104,7 +138,7 @@ const AdminEvaluatorsPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">{user.instituicao?.sigla || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button 
-                        onClick={() => handleOpenModal(user)} // Botão para editar
+                        onClick={() => handleOpenEvaluatorModal(user)}
                         className="text-brand-blue hover:text-brand-blue-dark mr-4"
                       >
                         <Edit size={18} />

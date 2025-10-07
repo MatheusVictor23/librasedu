@@ -1,35 +1,56 @@
-// [INÍCIO DO CÓDIGO]
+// apps/web/src/pages/AdminSinaisPage.jsx
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../layouts/AdminLayout';
 import api from '../api/axiosConfig';
 import { Video, Clock, CheckCircle, UploadCloud } from 'lucide-react';
-import PublishSinalModal from '../components/admin/PublishSinalModal'; // 1. Importar o novo modal
+import PublishSinalModal from '../components/admin/PublishSinalModal';
 
 const AdminSinaisPage = () => {
   const [proposals, setProposals] = useState([]);
-  const [approvedUnpublished, setApprovedUnpublished] = useState([]); // 2. Novo estado para propostas aprovadas
+  const [approvedUnpublished, setApprovedUnpublished] = useState([]);
   const [officialSignals, setOfficialSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 3. Estados para controlar o modal de publicação
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
+    setError('');
     try {
-      // Faz as três chamadas à API em paralelo
-      const [proposalsRes, approvedRes, officialSignalsRes] = await Promise.all([
+      // --- CORREÇÃO AQUI: Usar Promise.allSettled para resiliência ---
+      const results = await Promise.allSettled([
         api.get('/admin/sinais-propostos'), // Pendentes
         api.get('/admin/proposals/approved-unpublished'), // Aprovados aguardando publicação
         api.get('/admin/sinais-oficiais') // Já publicados
       ]);
-      setProposals(proposalsRes.data);
-      setApprovedUnpublished(approvedRes.data);
-      setOfficialSignals(officialSignalsRes.data);
+
+      // Verificar o resultado de cada promessa individualmente
+      if (results[0].status === 'fulfilled') {
+        setProposals(results[0].value.data);
+      } else {
+        console.error("Erro ao buscar propostas pendentes:", results[0].reason);
+        setError(prev => prev + ' Erro ao carregar propostas pendentes.');
+      }
+
+      if (results[1].status === 'fulfilled') {
+        setApprovedUnpublished(results[1].value.data);
+      } else {
+        console.error("Erro ao buscar propostas aprovadas:", results[1].reason);
+        setError(prev => prev + ' Erro ao carregar propostas aprovadas.');
+      }
+
+      if (results[2].status === 'fulfilled') {
+        setOfficialSignals(results[2].value.data);
+      } else {
+        console.error("Erro ao buscar sinais oficiais:", results[2].reason);
+        setError(prev => prev + ' Erro ao carregar sinais oficiais.');
+      }
+
     } catch (err) {
-      setError('Não foi possível carregar os dados dos sinais.');
+      // Este bloco agora é menos provável de ser atingido, mas é mantido como segurança
+      setError('Ocorreu um erro inesperado ao carregar os dados.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -55,8 +76,6 @@ const AdminSinaisPage = () => {
     fetchData(); // Recarrega todos os dados para atualizar as listas
   };
   
-  if (error) return <AdminLayout><p className="text-red-500">{error}</p></AdminLayout>;
-
   return (
     <AdminLayout>
       {isPublishModalOpen && (
@@ -66,6 +85,10 @@ const AdminSinaisPage = () => {
           onPublished={handleSignalPublished}
         />
       )}
+      
+      <h2 className="text-2xl font-semibold text-brand-text-primary mb-6">Consultar Sinais</h2>
+      
+      {error && <p className="text-red-500 bg-red-50 p-3 rounded-md mb-4">{error}</p>}
       
       {loading ? (
         <p>A carregar sinais...</p>
@@ -88,11 +111,11 @@ const AdminSinaisPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {approvedUnpublished.map(p => (
+                  {approvedUnpublished.length > 0 ? approvedUnpublished.map(p => (
                     <tr key={p.id}>
                       <td className="px-6 py-4 whitespace-nowrap font-medium">{p.nome}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.proposer.nome}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.avaliador.nome}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.proposer?.nome || 'N/A'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.avaliador?.nome || 'N/A'}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleOpenPublishModal(p)}
@@ -102,7 +125,11 @@ const AdminSinaisPage = () => {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="4" className="text-center text-gray-500 py-4">Nenhuma proposta aprovada para publicação.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -124,17 +151,21 @@ const AdminSinaisPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {proposals.map(p => (
+                  {proposals.length > 0 ? proposals.map(p => (
                     <tr key={p.id}>
                       <td className="px-6 py-4 whitespace-nowrap font-medium">{p.nome}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.proposer.nome}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.proposer?.nome || 'N/A'}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <a href={`http://localhost:3000/${p.videoBrutoUrl}`} target="_blank" rel="noopener noreferrer" className="text-brand-blue hover:underline">
                           <Video size={20} />
                         </a>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="3" className="text-center text-gray-500 py-4">Nenhuma proposta pendente.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -156,17 +187,21 @@ const AdminSinaisPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {officialSignals.map(s => (
+                  {officialSignals.length > 0 ? officialSignals.map(s => (
                     <tr key={s.id}>
                       <td className="px-6 py-4 whitespace-nowrap font-medium">{s.nome}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{s.disciplina.nome}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{s.disciplina?.nome || 'N/A'}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <a href={s.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-brand-blue hover:underline">
                           <Video size={20} />
                         </a>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                     <tr>
+                      <td colSpan="3" className="text-center text-gray-500 py-4">Nenhum sinal oficial publicado.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -178,4 +213,3 @@ const AdminSinaisPage = () => {
 };
 
 export default AdminSinaisPage;
-// [FIM DO CÓDIGO]
