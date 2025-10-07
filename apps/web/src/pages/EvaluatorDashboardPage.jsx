@@ -2,28 +2,47 @@
 import React, { useState, useEffect } from 'react';
 import EvaluatorLayout from '../layouts/EvaluatorLayout';
 import api from '../api/axiosConfig';
-import { ArrowRight } from 'lucide-react';
+// Ícones adicionados para a nova interface
+import { ArrowRight, FileText, User, Clock } from 'lucide-react';
 import EvaluationModal from '../components/EvaluationModal';
 
+// NOVO COMPONENTE: ProposalCard redesenhado
 const ProposalCard = ({ proposal, onEvaluate }) => (
-  <div className="bg-white rounded-lg shadow overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
-    <div className="p-4">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-semibold text-gray-800">{proposal.nome}</h3>
-        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full whitespace-nowrap">
-          {proposal.disciplina.nome}
-        </span>
-      </div>
-      <p className="text-gray-600 text-sm mb-4 line-clamp-2">{proposal.descricao}</p>
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-gray-500">Enviado por: {proposal.proposer.nome}</span>
-        <button onClick={() => onEvaluate(proposal)} className="text-brand-blue hover:text-brand-blue-dark text-sm font-medium flex items-center gap-1">
-          Avaliar <ArrowRight size={16} />
-        </button>
-      </div>
-    </div>
+    <div className="bg-white rounded-xl shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 border border-gray-100 group">
+        <div className="p-5">
+            <div className="flex items-start justify-between mb-3">
+                <div className="bg-blue-50 text-brand-blue p-3 rounded-lg">
+                    <FileText size={24} />
+                </div>
+                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+                    {proposal.disciplina.nome}
+                </span>
+            </div>
+            
+            <h3 className="text-lg font-bold text-gray-800 truncate mb-1">{proposal.nome}</h3>
+            
+            <div className="flex items-center text-sm text-gray-500 mb-4">
+                <User size={14} className="mr-2" />
+                <span>Enviado por: {proposal.proposer.nome}</span>
+            </div>
+
+            <p className="text-gray-600 text-sm mb-5 line-clamp-2">{proposal.descricao}</p>
+
+            <button 
+                onClick={() => onEvaluate(proposal)} 
+                className="w-full text-brand-blue bg-blue-50 hover:bg-blue-100 text-sm font-bold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-300"
+            >
+                Avaliar Proposta
+                <ArrowRight size={16} className="transform transition-transform duration-300 group-hover:translate-x-1" />
+            </button>
+        </div>
+        <div className="bg-gray-50 px-5 py-2 text-xs text-gray-500 flex items-center">
+            <Clock size={12} className="mr-1.5" />
+            Recebido em: {new Date(proposal.createdAt).toLocaleDateString('pt-BR')}
+        </div>
   </div>
 );
+
 
 const EvaluatorDashboardPage = () => {
   const [proposals, setProposals] = useState([]);
@@ -85,7 +104,10 @@ const EvaluatorDashboardPage = () => {
               <ProposalCard key={proposal.id} proposal={proposal} onEvaluate={handleEvaluateClick} />
             ))
           ) : (
-            <p className="col-span-full text-center text-gray-500 py-10">Não há propostas pendentes para avaliação no momento.</p>
+            <div className="col-span-full text-center text-gray-500 py-16 bg-white rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold">Tudo certo por aqui!</h3>
+                <p>Não há propostas pendentes para avaliação no momento.</p>
+            </div>
           )}
         </div>
       )}
