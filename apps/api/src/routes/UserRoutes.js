@@ -1,3 +1,4 @@
+// apps/api/src/routes/UserRoutes.js
 import { Router } from 'express';
 import { 
     getAllUsers, 
@@ -7,7 +8,8 @@ import {
     updateProfile,
     deleteUser,
     getMyStats,
-    getMyFavoritedSinais,
+    getMySavedSinais, // Renomeado
+    getMyLikedSinais, // Novo
     getMySubmittedProposals,
     getMyProfile
 } from '../controllers/UserController.js';
@@ -20,15 +22,14 @@ const router = Router();
 router.post('/users', uploadAvatar.single('avatar'), createUser); 
 
 // --- ROTAS PROTEGIDAS PARA DADOS DO PRÓPRIO UTILIZADOR ('ME') ---
-// CORREÇÃO: Esta rota específica deve vir ANTES da rota genérica com :id
 router.get('/users/me', protect, getMyProfile);
 router.get('/users/me/stats', protect, getMyStats);
-router.get('/users/me/favorites', protect, getMyFavoritedSinais);
+router.get('/users/me/saved', protect, getMySavedSinais); // Rota para sinais salvos
+router.get('/users/me/liked', protect, getMyLikedSinais); // Nova rota para sinais curtidos
 router.get('/users/me/proposals', protect, getMySubmittedProposals);
 router.put('/users/profile', protect, uploadAvatar.single('avatar'), updateProfile);
 
 // --- ROTAS DE ADMIN ---
-// Esta rota genérica com :id vem DEPOIS das rotas 'me'
 router.get('/users', protect, isAdmin, getAllUsers);
 router.get('/users/:id', protect, isAdmin, getUserById); 
 router.put('/users/:id', protect, isAdmin, updateUser); 

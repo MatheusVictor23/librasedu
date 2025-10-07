@@ -1,3 +1,4 @@
+// apps/api/src/services/UserService.js
 import prisma from '../prismaClient.js';
 import bcrypt from 'bcryptjs';
 
@@ -168,12 +169,14 @@ const getUserStats = async (userId) => {
     }
 }
 
-const getFavoritedSinais = async (userId) => {
-    return prisma.sinalFavorito.findMany({
+// RENOMEADO: De getFavoritedSinais para getSavedSinais
+const getSavedSinais = async (userId) => {
+    return prisma.sinalSalvo.findMany({
         where: { usuarioId: parseInt(userId, 10) },
         include: {
             sinal: true
-        }
+        },
+        orderBy: { createdAt: 'desc' }
     })
 }
 
@@ -186,6 +189,18 @@ const getSubmittedProposals = async (userId) => {
         }
     })
 }
+
+// NOVO: Função para buscar sinais curtidos
+const getLikedSinais = async (userId) => {
+  return prisma.sinalCurtido.findMany({
+    where: { usuarioId: parseInt(userId, 10) },
+    include: {
+      sinal: true,
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+};
+
 
 export default {
   getAll,
@@ -200,7 +215,8 @@ export default {
   getRecentUsers,
   getUsersByRole,
   getUserStats,
-  getFavoritedSinais,
+  getSavedSinais, // Nome atualizado
   getSubmittedProposals,
-  getProfileById
+  getProfileById,
+  getLikedSinais, // Nova função
 };

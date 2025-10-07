@@ -1,3 +1,4 @@
+// apps/api/src/controllers/UserController.js
 import UserService from '../services/UserService.js';
 import InstituicaoService from '../services/InstituicaoService.js';
 import SinalPropostoService from '../services/SinalPropostoService.js';
@@ -171,12 +172,13 @@ export const getMyStats = async (req, res) => {
     }
 };
 
-export const getMyFavoritedSinais = async (req, res) => {
+// ATUALIZADO
+export const getMySavedSinais = async (req, res) => {
     try {
-        const sinais = await UserService.getFavoritedSinais(req.user.id);
+        const sinais = await UserService.getSavedSinais(req.user.id);
         res.json(sinais);
     } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar sinais favoritados.', details: error.message });
+        res.status(500).json({ error: 'Erro ao buscar sinais guardados.', details: error.message });
     }
 };
 
@@ -187,4 +189,14 @@ export const getMySubmittedProposals = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar propostas submetidas.', details: error.message });
     }
+};
+
+// NOVO
+export const getMyLikedSinais = async (req, res) => {
+  try {
+    const sinais = await UserService.getLikedSinais(req.user.id);
+    res.json(sinais);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar sinais curtidos.', details: error.message });
+  }
 };

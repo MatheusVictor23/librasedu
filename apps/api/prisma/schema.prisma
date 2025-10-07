@@ -1,4 +1,4 @@
-// [INÍCIO DO CÓDIGO]
+// apps/api/prisma/schema.prisma
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -16,7 +16,7 @@ model Usuario {
   cpf             String
   email           String           @unique
   senha           String
-  avatarUrl       String?          
+  avatarUrl       String?
   role            Role             @default(USER)
   sinaisPropostos SinalProposto[]  @relation("SinaisPropostos")
   sinaisAvaliados SinalProposto[]  @relation("SinaisAvaliados")
@@ -24,7 +24,10 @@ model Usuario {
   updatedAt       DateTime         @updatedAt()
 
   instituicao     Instituicao?     @relation(fields: [idInstituicao], references: [id])
-  SinalFavorito   SinalFavorito[]
+  
+  sinaisSalvos    SinalSalvo[]
+  curtidas        SinalCurtido[]
+  comentarios     Comentario[]
 
   solicitacoesInstituicao SolicitacaoInstituicao[]
   solicitacoesVinculo     SolicitacaoVinculo[]
@@ -40,10 +43,10 @@ model Instituicao {
   id                 Int      @id @default(autoincrement())
   nome               String   @unique
   sigla              String
-  cidade             String   // <-- ADICIONAR ESTA LINHA
-  estado             String   // <-- ADICIONAR ESTA LINHA
-  nomeRepresentante  String   // <-- ADICIONAR ESTA LINHA
-  cargoRepresentante String   // <-- ADICIONAR ESTA LINHA
+  cidade             String
+  estado             String
+  nomeRepresentante  String
+  cargoRepresentante String
   usuarios           Usuario[]
   createdAt          DateTime @default(now())
 
@@ -94,12 +97,15 @@ model Sinal {
   disciplina      Disciplina    @relation(fields: [disciplinaId], references: [id])
   sinalProposto   SinalProposto @relation(fields: [sinalPropostoId], references: [id])
 
-  SinalFavorito SinalFavorito[]
+  sinaisSalvos    SinalSalvo[]
+  curtidas        SinalCurtido[]
+  comentarios     Comentario[]
 }
 
+// --- CORREÇÃO AQUI ---
 enum PropostaStatus {
   PENDENTE
-  APROVADO
+  APROVADO // Corrigido de "APROVado" para "APROVADO"
   REJEITADO
 }
 
@@ -123,24 +129,49 @@ model SinalProposto {
   Sinal      Sinal?
 }
 
-model SinalFavorito {
+model SinalSalvo {
   usuarioId Int
   sinalId   Int
+  createdAt DateTime @default(now())
 
-  usuario Usuario @relation(fields: [usuarioId], references: [id])
-  sinal   Sinal   @relation(fields: [sinalId],  references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  sinal   Sinal   @relation(fields: [sinalId],  references: [id], onDelete: Cascade)
 
   @@id([usuarioId, sinalId])
 }
 
-// NOVO ENUM para o status das solicitações
+model SinalCurtido {
+  usuarioId Int
+  sinalId   Int
+  createdAt DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  sinal   Sinal   @relation(fields: [sinalId],  references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, sinalId])
+}
+
+model Comentario {
+  id        Int      @id @default(autoincrement())
+  texto     String
+  createdAt DateTime @default(now())
+
+  sinalId   Int
+  usuarioId Int
+
+  sinal   Sinal   @relation(fields: [sinalId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([sinalId])
+}
+
+
 enum SolicitacaoStatus {
   PENDENTE
   APROVADO
   REJEITADO
 }
 
-// NOVO MODELO: Para solicitações de cadastro de novas instituições
 model SolicitacaoInstituicao {
   id                                  Int               @id @default(autoincrement())
   usuarioId                           Int
@@ -159,7 +190,6 @@ model SolicitacaoInstituicao {
   usuario Usuario @relation(fields: [usuarioId], references: [id])
 }
 
-// NOVO MODELO: Para solicitações de vínculo a instituições existentes
 model SolicitacaoVinculo {
   id                        Int               @id @default(autoincrement())
   usuarioId                 Int
@@ -173,4 +203,3 @@ model SolicitacaoVinculo {
   usuario     Usuario     @relation(fields: [usuarioId], references: [id])
   instituicao Instituicao @relation(fields: [instituicaoId], references: [id])
 }
-// [FIM DO CÓDIGO]

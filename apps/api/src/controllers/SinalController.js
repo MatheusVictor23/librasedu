@@ -1,11 +1,13 @@
+// apps/api/src/controllers/SinalController.js
 import SinalService from '../services/SinalService.js';
 
 const getAllSinais = async (req, res) => {
   const { searchTerm } = req.query;
+  const userId = req.user?.id;
   try {
     const sinais = searchTerm 
-      ? await SinalService.search(searchTerm)
-      : await SinalService.getAll();
+      ? await SinalService.search(searchTerm, userId)
+      : await SinalService.getAll(userId);
     res.json(sinais);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar sinais.', details: error.message });
@@ -15,7 +17,8 @@ const getAllSinais = async (req, res) => {
 const getSinalById = async (req, res) => {
   try {
     const { id } = req.params;
-    const sinal = await SinalService.getById(id);
+    const userId = req.user?.id;
+    const sinal = await SinalService.getById(id, userId);
     res.status(200).json(sinal);
   } catch (error) {
     if (error.message === 'Sinal não encontrado') {
@@ -56,7 +59,8 @@ const publishSinal = async (req, res) => {
 
 const getTrendingSinais = async (req, res) => {
   try {
-    const sinais = await SinalService.getTrending();
+    const userId = req.user?.id;
+    const sinais = await SinalService.getTrending(userId);
     res.json(sinais);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar sinais em alta.', details: error.message });
@@ -65,7 +69,8 @@ const getTrendingSinais = async (req, res) => {
 
 const getRecentSinais = async (req, res) => {
   try {
-    const sinais = await SinalService.getRecent();
+    const userId = req.user?.id;
+    const sinais = await SinalService.getRecent(userId);
     res.json(sinais);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar sinais recentes.', details: error.message });
@@ -74,10 +79,82 @@ const getRecentSinais = async (req, res) => {
 
 const getRecommendedSinais = async (req, res) => {
   try {
-    const sinais = await SinalService.getRecommended();
+    const userId = req.user?.id;
+    const sinais = await SinalService.getRecommended(userId);
     res.json(sinais);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar sinais recomendados.', details: error.message });
+  }
+};
+
+const likeSinal = async (req, res) => {
+  try {
+    const { id: sinalId } = req.params;
+    const { id: userId } = req.user;
+    await SinalService.likeSinal(sinalId, userId);
+    res.status(201).json({ message: 'Sinal curtido com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Não foi possível curtir o sinal.', details: error.message });
+  }
+};
+
+const unlikeSinal = async (req, res) => {
+  try {
+    const { id: sinalId } = req.params;
+    const { id: userId } = req.user;
+    await SinalService.unlikeSinal(sinalId, userId);
+    res.status(200).json({ message: 'Curtida removida com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Não foi possível remover a curtida.', details: error.message });
+  }
+};
+
+const saveSinal = async (req, res) => {
+  try {
+    const { id: sinalId } = req.params;
+    const { id: userId } = req.user;
+    await SinalService.saveSinal(sinalId, userId);
+    res.status(201).json({ message: 'Sinal guardado com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Não foi possível guardar o sinal.', details: error.message });
+  }
+};
+
+const unsaveSinal = async (req, res) => {
+  try {
+    const { id: sinalId } = req.params;
+    const { id: userId } = req.user;
+    await SinalService.unsaveSinal(sinalId, userId);
+    res.status(200).json({ message: 'Sinal removido dos guardados com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Não foi possível remover o sinal dos guardados.', details: error.message });
+  }
+};
+
+const getComentarios = async (req, res) => {
+  try {
+    const { id: sinalId } = req.params;
+    const comentarios = await SinalService.getComentarios(sinalId);
+    res.json(comentarios);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar comentários.', details: error.message });
+  }
+};
+
+const addComentario = async (req, res) => {
+  try {
+    const { id: sinalId } = req.params;
+    const { id: usuarioId } = req.user;
+    const { texto } = req.body;
+
+    if (!texto || !texto.trim()) {
+      return res.status(400).json({ error: 'O texto do comentário não pode estar vazio.' });
+    }
+
+    const novoComentario = await SinalService.addComentario(sinalId, usuarioId, texto);
+    res.status(201).json(novoComentario);
+  } catch (error) {
+    res.status(500).json({ error: 'Não foi possível adicionar o comentário.', details: error.message });
   }
 };
 
@@ -88,5 +165,11 @@ export default {
   publishSinal,
   getTrendingSinais,
   getRecentSinais,
-  getRecommendedSinais
+  getRecommendedSinais,
+  likeSinal,
+  unlikeSinal,
+  saveSinal,
+  unsaveSinal,
+  getComentarios,
+  addComentario,
 };

@@ -1,39 +1,65 @@
+// apps/api/src/services/SinalService.js
 import prisma from '../prismaClient.js';
 
-const getAll = async () => {
-  return prisma.sinal.findMany({
+// Função auxiliar para enriquecer os sinais com dados do utilizador
+const enrichSinaisWithUserData = async (sinais, userId) => {
+  if (!userId || sinais.length === 0) return sinais.map(sinal => ({ ...sinal, isLiked: false, isSaved: false }));
+
+  const sinalIds = sinais.map(s => s.id);
+
+  const liked = await prisma.sinalCurtido.findMany({
+    where: { sinalId: { in: sinalIds }, usuarioId: userId },
+    select: { sinalId: true }
+  });
+
+  const saved = await prisma.sinalSalvo.findMany({
+    where: { sinalId: { in: sinalIds }, usuarioId: userId },
+    select: { sinalId: true }
+  });
+
+  const likedIds = new Set(liked.map(l => l.sinalId));
+  const savedIds = new Set(saved.map(s => s.sinalId));
+
+  return sinais.map(sinal => ({
+    ...sinal,
+    isLiked: likedIds.has(sinal.id),
+    isSaved: savedIds.has(sinal.id),
+  }));
+};
+
+const getAll = async (userId) => {
+  const sinais = await prisma.sinal.findMany({
     include: {
       disciplina: true,
       sinalProposto: {
         include: {
           proposer: true,
-          avaliador: true,
         },
       },
       _count: {
-        select: { SinalFavorito: true },
+        select: { curtidas: true },
       },
     },
+    orderBy: {
+      createdAt: 'desc'
+    }
   });
+  return enrichSinaisWithUserData(sinais, userId);
 };
 
-const getById = async (id) => {
+const getById = async (id, userId) => {
   const sinal = await prisma.sinal.findUnique({
     where: { id: parseInt(id, 10) },
     include: {
       disciplina: true,
       sinalProposto: {
         include: {
-          proposer: {
-            include: {
-              instituicao: true,
-            },
-          },
+          proposer: { include: { instituicao: true } },
           avaliador: true,
         },
       },
       _count: {
-        select: { SinalFavorito: true },
+        select: { curtidas: true },
       },
     },
   });
@@ -41,56 +67,66 @@ const getById = async (id) => {
   if (!sinal) {
     throw new Error('Sinal não encontrado');
   }
-  return sinal;
+
+  const [enrichedSinal] = await enrichSinaisWithUserData([sinal], userId);
+  return enrichedSinal;
 };
 
-
-const getTrending = async (take = 6) => {
-  return prisma.sinal.findMany({
+const getTrending = async (userId, take = 6) => {
+  const sinais = await prisma.sinal.findMany({
     take,
     include: {
+      disciplina: true,
+      sinalProposto: { include: { proposer: true } },
       _count: {
-        select: { SinalFavorito: true },
+        select: { curtidas: true },
       },
     },
     orderBy: {
-      SinalFavorito: {
+      curtidas: {
         _count: 'desc',
       },
     },
   });
+  return enrichSinaisWithUserData(sinais, userId);
 };
 
-const getRecent = async (take = 6) => {
-  return prisma.sinal.findMany({
+const getRecent = async (userId, take = 6) => {
+  const sinais = await prisma.sinal.findMany({
     take,
     orderBy: {
       createdAt: 'desc',
     },
     include: {
+        disciplina: true,
+        sinalProposto: { include: { proposer: true } },
         _count: {
-            select: { SinalFavorito: true },
+            select: { curtidas: true },
         },
     }
   });
+  return enrichSinaisWithUserData(sinais, userId);
 };
 
-const getRecommended = async (take = 6) => {
+const getRecommended = async (userId, take = 6) => {
     const totalSinais = await prisma.sinal.count();
     const skip = Math.max(0, Math.floor(Math.random() * totalSinais) - take);
-    return prisma.sinal.findMany({
+    const sinais = await prisma.sinal.findMany({
         take,
         skip,
         include: {
+            disciplina: true,
+            sinalProposto: { include: { proposer: true } },
             _count: {
-                select: { SinalFavorito: true },
+                select: { curtidas: true },
             },
         }
     });
+    return enrichSinaisWithUserData(sinais, userId);
 };
 
-const search = async (term) => {
-    return prisma.sinal.findMany({
+const search = async (term, userId) => {
+    const sinais = await prisma.sinal.findMany({
         where: {
             nome: {
                 contains: term,
@@ -98,14 +134,16 @@ const search = async (term) => {
             }
         },
         include: {
+            disciplina: true,
+            sinalProposto: { include: { proposer: true } },
             _count: {
-                select: { SinalFavorito: true },
+                select: { curtidas: true },
             },
         }
     })
+    return enrichSinaisWithUserData(sinais, userId);
 }
 
-// ATUALIZAÇÃO: Esta função agora é chamada pelo Admin para publicar o sinal.
 const createFromProposal = async (proposalId, youtubeUrl) => {
   const proposta = await prisma.sinalProposto.findUnique({
     where: { id: parseInt(proposalId) },
@@ -119,15 +157,91 @@ const createFromProposal = async (proposalId, youtubeUrl) => {
       throw new Error('Esta proposta ainda não foi aprovada por um avaliador.');
   }
 
-  // Cria o Sinal Oficial com a URL do YouTube fornecida pelo admin
   return prisma.sinal.create({
     data: {
       nome: proposta.nome,
       descricao: proposta.descricao,
-      youtubeUrl: youtubeUrl, // Usa a URL final
+      youtubeUrl: youtubeUrl,
       disciplina: { connect: { id: proposta.disciplinaId } },
       sinalProposto: { connect: { id: proposta.id } },
     },
+  });
+};
+
+const likeSinal = async (sinalId, userId) => {
+  return prisma.sinalCurtido.create({
+    data: {
+      sinalId: parseInt(sinalId, 10),
+      usuarioId: parseInt(userId, 10),
+    }
+  });
+};
+
+const unlikeSinal = async (sinalId, userId) => {
+  return prisma.sinalCurtido.delete({
+    where: {
+      usuarioId_sinalId: {
+        sinalId: parseInt(sinalId, 10),
+        usuarioId: parseInt(userId, 10),
+      }
+    }
+  });
+};
+
+const saveSinal = async (sinalId, userId) => {
+  return prisma.sinalSalvo.create({
+    data: {
+      sinalId: parseInt(sinalId, 10),
+      usuarioId: parseInt(userId, 10),
+    }
+  });
+};
+
+const unsaveSinal = async (sinalId, userId) => {
+  return prisma.sinalSalvo.delete({
+    where: {
+      usuarioId_sinalId: {
+        sinalId: parseInt(sinalId, 10),
+        usuarioId: parseInt(userId, 10),
+      }
+    }
+  });
+};
+
+const getComentarios = async (sinalId) => {
+  return prisma.comentario.findMany({
+    where: { sinalId: parseInt(sinalId, 10) },
+    include: {
+      usuario: {
+        select: {
+          id: true,
+          nome: true,
+          avatarUrl: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+};
+
+const addComentario = async (sinalId, usuarioId, texto) => {
+  return prisma.comentario.create({
+    data: {
+      texto,
+      sinalId: parseInt(sinalId, 10),
+      usuarioId: parseInt(usuarioId, 10),
+    },
+    include: {
+        usuario: {
+            select: {
+                id: true,
+                nome: true,
+                avatarUrl: true
+            }
+        }
+    }
   });
 };
 
@@ -138,5 +252,11 @@ export default {
   getTrending,
   getRecent,
   getRecommended,
-  search
+  search,
+  likeSinal,
+  unlikeSinal,
+  saveSinal,
+  unsaveSinal,
+  getComentarios,
+  addComentario,
 };
