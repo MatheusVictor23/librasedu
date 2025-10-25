@@ -30,14 +30,32 @@ export default {
         'page-gradient': 'linear-gradient(to bottom, #F4F6F6, #39548f)',
       },
       animation: { 
-        'fade-in': 'fadeIn 0.5s ease-out' }, 
-        keyframes: { 
-          fadeIn: { 
-            '0%': { opacity: 0 }, 
-            '100%': { opacity: 1 } } 
-          }
+        'fade-in': 'fadeIn 0.5s ease-out',
+        // --- ALTERAÇÃO AQUI ---
+        'blob': 'blob 12s infinite', // Aumentámos a duração para um movimento mais lento
+      }, 
+      keyframes: { 
+        fadeIn: { 
+          '0%': { opacity: 0 }, 
+          '100%': { opacity: 1 } 
+        },
+        // --- ANIMAÇÃO DE FLUTUAÇÃO MELHORADA ---
+        blob: {
+          '0%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
+          '33%': {
+            transform: 'translate(100px, -80px) scale(1.2)',
+          },
+          '66%': {
+            transform: 'translate(-80px, 50px) scale(0.9)',
+          },
+          '100%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
+        },
+      }
     },
   },
   plugins: [],
 }
-

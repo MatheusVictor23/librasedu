@@ -1,18 +1,14 @@
-
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import taipiriImg from "../assets/taipiriLogin.png";
-import { UserCircle } from 'lucide-react';
-// Importar o arquivo CSS de animações (assumindo que será integrado ao projeto)
-// import '../animations.css'; 
+import { UserCircle, ArrowLeft } from 'lucide-react';
 
 const AnimatedBackgroundBlobs = () => (
   <>
-    <div className="absolute top-10 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob-spin-1"></div>
-    <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob-move-1"></div>
-    <div className="absolute top-5 right-20 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-blob-spin-2 delay-1000"></div>
-    <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-35 animate-blob-move-2 delay-2000"></div>
+    <div className="absolute top-10 left-10 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-blob"></div>
+    <div className="absolute top-20 right-20 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-blob [animation-delay:-5s]"></div>
+    <div className="absolute bottom-10 left-40 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-blob [animation-delay:-2s]"></div>
   </>
 );
 
@@ -25,7 +21,6 @@ const RegisterPage = () => {
     confirmarSenha: '',
     role: 'USER'
   });
-
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [errors, setErrors] = useState({});
@@ -58,8 +53,6 @@ const RegisterPage = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.nome.trim()) newErrors.nome = 'Nome é obrigatório';
-    
-    // Validação de CPF
     const cleanedCPF = formData.cpf.replace(/\D/g, '');
     if (!cleanedCPF) {
       newErrors.cpf = 'CPF é obrigatório';
@@ -70,14 +63,11 @@ const RegisterPage = () => {
     } else if (!validateCPFDigits(cleanedCPF)) {
       newErrors.cpf = 'CPF inválido';
     }
-
-    // Validação de Email
     if (!formData.email.trim()) {
       newErrors.email = 'Email é obrigatório';
     } else if (!/^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,6}$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
-
     if (!formData.senha) {
       newErrors.senha = 'Senha é obrigatória';
     } else if (formData.senha.length < 6) {
@@ -90,50 +80,38 @@ const RegisterPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Função de validação de dígitos do CPF (algoritmo)
   const validateCPFDigits = (cpf) => {
     let sum = 0;
     let remainder;
-
     if (cpf === '00000000000') return false;
-
     for (let i = 1; i <= 9; i++) sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
     remainder = (sum * 10) % 11;
-
     if ((remainder === 10) || (remainder === 11)) remainder = 0;
     if (remainder !== parseInt(cpf.substring(9, 10))) return false;
-
     sum = 0;
     for (let i = 1; i <= 10; i++) sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
     remainder = (sum * 10) % 11;
-
     if ((remainder === 10) || (remainder === 11)) remainder = 0;
     if (remainder !== parseInt(cpf.substring(10, 11))) return false;
-
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setIsLoading(true);
     setErrors({});
-
     const submissionData = new FormData();
     submissionData.append('nome', formData.nome);
     submissionData.append('cpf', formData.cpf.replace(/\D/g, ''));
     submissionData.append('email', formData.email);
     submissionData.append('senha', formData.senha);
     submissionData.append('role', formData.role);
-
     if (avatarFile) {
       submissionData.append('avatar', avatarFile);
     }
-    
     try {
       const userResponse = await axios.post('http://localhost:3000/api/users', submissionData);
-
       if (userResponse.status >= 200 && userResponse.status < 300) {
         resetForm();
         alert('Utilizador registado com sucesso! Faça login para continuar.');
@@ -151,9 +129,7 @@ const RegisterPage = () => {
   };
 
   const resetForm = () => {
-    setFormData({
-      nome: '', cpf: '', email: '', senha: '', confirmarSenha: '', role: 'USER'
-    });
+    setFormData({ nome: '', cpf: '', email: '', senha: '', confirmarSenha: '', role: 'USER' });
     setAvatarFile(null);
     setAvatarPreview('');
     setErrors({});
@@ -162,15 +138,9 @@ const RegisterPage = () => {
   const formatCPF = (value) => {
     const cleaned = value.replace(/\D/g, '');
     let formatted = cleaned;
-    if (cleaned.length > 3) {
-      formatted = cleaned.substring(0, 3) + '.' + cleaned.substring(3);
-    }
-    if (cleaned.length > 6) {
-      formatted = formatted.substring(0, 7) + '.' + cleaned.substring(6);
-    }
-    if (cleaned.length > 9) {
-      formatted = formatted.substring(0, 11) + '-' + cleaned.substring(9);
-    }
+    if (cleaned.length > 3) formatted = cleaned.substring(0, 3) + '.' + cleaned.substring(3);
+    if (cleaned.length > 6) formatted = formatted.substring(0, 7) + '.' + cleaned.substring(6);
+    if (cleaned.length > 9) formatted = formatted.substring(0, 11) + '-' + cleaned.substring(9);
     return formatted.substring(0, 14);
   };
 
@@ -180,18 +150,21 @@ const RegisterPage = () => {
   };
   
   return (
-    <section className="bg-brand-background-light w-full min-h-screen flex flex-col md:flex-row">
-      {/* Lado Esquerdo - Imagem e Animação */}
-      <div className="relative w-full md:w-1/2 h-64 md:h-screen overflow-hidden hidden md:flex items-center justify-center">
-        <AnimatedBackgroundBlobs />
-        <img src={taipiriImg} alt="Portal Tapiri" className="relative z-10 max-w-[70%] h-auto" /> {/* Aumentado para 70% */}
+    <section className="relative bg-brand-background-light w-full min-h-screen flex flex-col md:flex-row overflow-hidden">
+      <AnimatedBackgroundBlobs />
+      
+      <Link to="/" className="absolute top-6 left-6 z-20 p-2 bg-white/50 rounded-full hover:bg-white transition-colors shadow-md">
+        <ArrowLeft className="text-brand-blue" />
+      </Link>
+      
+      <div className="relative z-10 w-full md:w-1/2 h-64 md:h-screen hidden md:flex items-center justify-center">
+        <img src={taipiriImg} alt="Portal Tapiri" className="relative z-10 max-w-[70%] h-auto" />
       </div>
 
-      {/* Lado Direito - Formulário */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-4 sm:p-8 md:p-10">
-        <div className="w-full max-w-md bg-white px-6 sm:px-8 md:px-10 py-8 rounded-3xl shadow-2xl shadow-slate-400"> {/* max-w-md e padding ajustados */}
+      <div className="relative z-10 w-full md:w-1/2 flex items-center justify-center p-4 sm:p-8 md:p-10">
+        <div className="w-full max-w-md bg-white/80 backdrop-blur-sm px-6 sm:px-8 md:px-10 py-8 rounded-3xl shadow-2xl shadow-slate-400">
           <div>
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight text-brand-blue">Registe-se</h3>
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight text-brand-blue">Registre-se</h3>
             <p className="mt-2 mb-4 sm:mb-6 text-sm sm:text-base text-brand-text-secondary">
               Já possui conta? <Link to="/login" className="underline text-brand-blue font-semibold">Login</Link>
             </p>
@@ -199,11 +172,7 @@ const RegisterPage = () => {
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="flex flex-col items-center space-y-2">
               <label htmlFor="avatar-upload" className="cursor-pointer">
-                {avatarPreview ? (
-                  <img src={avatarPreview} alt="Preview" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-200" />
-                ) : (
-                  <UserCircle size={80} className="text-gray-300 sm:size-24" />
-                )}
+                {avatarPreview ? (<img src={avatarPreview} alt="Preview" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-200" />) : (<UserCircle size={80} className="text-gray-300 sm:size-24" />)}
               </label>
               <input id="avatar-upload" name="avatar" type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
               <label htmlFor="avatar-upload" className="text-xs sm:text-sm font-medium text-brand-blue hover:underline cursor-pointer">
@@ -243,19 +212,11 @@ const RegisterPage = () => {
               </div>
             </div>
             
-            {errors.submit && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-xs sm:text-sm">
-                {errors.submit}
-              </div>
-            )}
+            {errors.submit && (<div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-xs sm:text-sm">{errors.submit}</div>)}
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
-              <button type="button" onClick={onClose} className="flex-1 px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                Cancelar
-              </button>
-              <button type="submit" className="flex-1 px-3 py-2 sm:px-4 sm:py-2 border border-transparent rounded-lg shadow-sm text-xs sm:text-sm font-medium text-white bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-50" disabled={isLoading}>
-                {isLoading ? 'A Registar...' : 'Registar'}
-              </button>
+              <button type="button" onClick={onClose} className="flex-1 px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Cancelar</button>
+              <button type="submit" className="flex-1 px-3 py-2 sm:px-4 sm:py-2 border border-transparent rounded-lg shadow-sm text-xs sm:text-sm font-medium text-white bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-50" disabled={isLoading}>{isLoading ? 'Registrando...' : 'Registrar'}</button>
             </div>
           </form>
         </div>
