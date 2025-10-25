@@ -1,18 +1,37 @@
 // src/components/RankingSection.jsx
-import React from 'react';
-// CORREÇÃO AQUI: Trocamos 'CheckBadge' por 'BadgeCheck'
-import { Award, BadgeCheck } from 'lucide-react';
-
-// Dados de exemplo (mock). No futuro, estes dados virão da nossa API.
-const collaborators = [
-  { rank: 1, name: 'Camila Albuquerque', role: 'Colaborador', score: 1689, avatar: 'https://i.pravatar.cc/150?img=1' },
-  { rank: 2, name: 'Rafael Mendonça', role: 'Especialista', score: 1549, avatar: 'https://i.pravatar.cc/150?img=2' },
-  { rank: 3, name: 'Marina Duarte', role: 'Especialista', score: 1200, avatar: 'https://i.pravatar.cc/150?img=3' },
-  { rank: 4, name: 'Larissa Monteiro', role: 'Colaborador', score: 1050, avatar: 'https://i.pravatar.cc/150?img=4' },
-  { rank: 5, name: 'Lucas Cavalcante', role: 'Colaborador', score: 958, avatar: 'https://i.pravatar.cc/150?img=5' },
-];
+import React, { useState, useEffect } from 'react'; // 1. Importar hooks
+import { BadgeCheck } from 'lucide-react';
+import api from '../api/axiosConfig'; // 2. Importar axios
 
 const RankingSection = () => {
+  // 3. Estados para dados dinâmicos e loading
+  const [collaborators, setCollaborators] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 4. Efeito para buscar os dados do ranking
+  useEffect(() => {
+    const fetchRanking = async () => {
+      try {
+        const response = await api.get('/public/ranking');
+        setCollaborators(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar o ranking:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRanking();
+  }, []);
+
+  // 5. Função para construir a URL do avatar
+  const getAvatarUrl = (user) => {
+    if (user.avatarUrl) {
+      return `http://localhost:3000/${user.avatarUrl}`;
+    }
+    // Avatar padrão gerado com as iniciais do nome
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=31487A&color=fff`;
+  };
+
   return (
     <section className="py-20">
       <div className="container mx-auto max-w-4xl px-6">
@@ -41,32 +60,39 @@ const RankingSection = () => {
           </div>
         </div>
 
-        {/* Lista do Ranking */}
+        {/* 6. Lista do Ranking Dinâmica */}
         <div className="space-y-3">
-          {collaborators.map((collab, index) => (
-            <div 
-              key={collab.rank} 
-              className="bg-white rounded-2xl shadow-lg p-4 flex items-center transition hover:shadow-xl hover:scale-[1.02]"
-              data-aos="fade-up" 
-              data-aos-delay={index * 100}
-            >
-              <div className="w-12 text-center">
-                <p className="text-2xl font-bold text-gray-400">{collab.rank}</p>
+          {loading ? (
+            <p className="text-center text-gray-500">A carregar ranking...</p>
+          ) : collaborators.length > 0 ? (
+            collaborators.map((collab, index) => (
+              <div 
+                key={collab.rank} 
+                className="bg-white rounded-2xl shadow-lg p-4 flex items-center transition hover:shadow-xl hover:scale-[1.02]"
+                data-aos="fade-up" 
+                data-aos-delay={index * 100}
+              >
+                <div className="w-12 text-center">
+                  <p className="text-2xl font-bold text-gray-400">{collab.rank}</p>
+                </div>
+                <div className="w-16">
+                  <img src={getAvatarUrl(collab)} alt={collab.name} className="w-12 h-12 rounded-full object-cover" />
+                </div>
+                <div className="flex-grow text-left">
+                  <p className="font-bold text-brand-text-primary">{collab.name}</p>
+                  <p className="text-sm text-brand-text-secondary">{collab.role}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <p className="font-bold text-brand-text-primary">{collab.score}</p>
+                  <BadgeCheck size={24} className="text-brand-blue" />
+                </div>
               </div>
-              <div className="w-16">
-                <img src={collab.avatar} alt={collab.name} className="w-12 h-12 rounded-full object-cover" />
-              </div>
-              <div className="flex-grow text-left">
-                <p className="font-bold text-brand-text-primary">{collab.name}</p>
-                <p className="text-sm text-brand-text-secondary">{collab.role}</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <p className="font-bold text-brand-text-primary">{collab.score}</p>
-                {/* CORREÇÃO AQUI: Usamos o nome correto do componente do ícone */}
-                <BadgeCheck size={24} className="text-brand-blue" />
-              </div>
+            ))
+          ) : (
+            <div className="bg-white rounded-2xl shadow-lg p-8 text-center" data-aos="fade-up">
+                <p className="text-brand-text-secondary">Ainda não há dados suficientes para formar um ranking. Seja o primeiro a contribuir!</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </section>

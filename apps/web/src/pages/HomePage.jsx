@@ -1,6 +1,6 @@
 // src/pages/HomePage.jsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // 1. Importar useState e useEffect
 import MainLayout from '../layouts/MainLayout';
 import ContributeSection from '../components/ContributeSection';
 import RankingSection from '../components/RankingSection';
@@ -8,8 +8,33 @@ import Button from '../components/Button';
 import illustrationUrl from "../assets/ilustracao.png";
 import statsIllustration from '../assets/ilustracao2.png';
 import { Link } from 'react-router-dom';
+import api from '../api/axiosConfig'; // 2. Importar a nossa instância do axios
 
 const HomePage = () => {
+  // 3. Criar um estado para armazenar as estatísticas
+  const [stats, setStats] = useState({
+    totalOfficialSignals: 0,
+    totalUsers: 0,
+    totalEvaluators: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  // 4. Usar o useEffect para buscar os dados da API quando o componente for montado
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/public/stats');
+        setStats(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar estatísticas públicas:", error);
+        // Em caso de erro, os valores padrão (0) serão mantidos
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []); // O array vazio garante que isto só executa uma vez
 
   // Conteúdo da parte de cima (fundo claro) que será passado para o slot "hero" do layout
   const heroContent = (
@@ -48,8 +73,9 @@ const HomePage = () => {
                 <div className="relative z-10">
                   <div className="flex">
                     <div className="lg:w-3/5 text-center lg:text-left" data-aos="fade-right" data-aos-delay="200">
+                        {/* 5. ATUALIZAÇÃO DO TÍTULO DINÂMICO */}
                         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-text-primary leading-snug">
-                            O Portal Tapiri conta com mais de <span className="text-brand-blue">15 mil sinais cadastrados</span>
+                            O Portal Tapiri conta com mais de <span className="text-brand-blue">{loading ? '...' : stats.totalOfficialSignals} sinais cadastrados</span>
                         </h2>
                         <p className="mt-3 sm:mt-4 text-sm sm:text-base text-brand-text-secondary">
                             Ut quia nihil ut voluptatem aliquam non itaque tempore et veritatis omnis et ipsa sunt. Lorem ipsum dolor sit amet. Aut vitae animi quo sequi doloribus qui maiores enim qui iste odio.
@@ -57,22 +83,25 @@ const HomePage = () => {
                     </div>
                   </div>
                   <div className="my-8 sm:my-12"></div>
+                  {/* 6. ATUALIZAÇÃO DOS CARDS DE ESTATÍSTICAS */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 text-center border-t border-gray-200 pt-6 sm:pt-8">
                       <div className="p-2 sm:p-4" data-aos="fade-up" data-aos-delay="300">
-                          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">15.000<span className="text-brand-blue">+</span></p>
+                          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">{loading ? '...' : stats.totalOfficialSignals}<span className="text-brand-blue">+</span></p>
                           <p className="text-xs sm:text-sm text-brand-text-secondary mt-1">Sinais cadastrados</p>
                       </div>
                       <div className="p-2 sm:p-4" data-aos="fade-up" data-aos-delay="400">
-                          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">700<span className="text-brand-blue">+</span></p>
+                          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">{loading ? '...' : stats.totalUsers}<span className="text-brand-blue">+</span></p>
                           <p className="text-xs sm:text-sm text-brand-text-secondary mt-1">Colaboradores</p>
                       </div>
                       <div className="p-2 sm:p-4" data-aos="fade-up" data-aos-delay="500">
-                          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">10<span className="text-brand-blue">+</span></p>
-                          <p className="text-xs sm:text-sm text-brand-text-secondary mt-1">Linguistas</p>
+                          {/* Assumindo que "Especialistas" vêm do total de avaliadores */}
+                          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">{loading ? '...' : stats.totalEvaluators}<span className="text-brand-blue">+</span></p>
+                          <p className="text-xs sm:text-sm text-brand-text-secondary mt-1">Especialistas</p>
                       </div>
                       <div className="p-2 sm:p-4" data-aos="fade-up" data-aos-delay="600">
-                          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">10<span className="text-brand-blue">+</span></p>
-                          <p className="text-xs sm:text-sm text-brand-text-secondary mt-1">Especialistas</p>
+                           {/* Exemplo de cálculo para "Linguistas", pode ajustar conforme sua regra de negócio */}
+                           <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-text-primary">{loading ? '...' : Math.floor(stats.totalEvaluators / 2)}<span className="text-brand-blue">+</span></p>
+                          <p className="text-xs sm:text-sm text-brand-text-secondary mt-1">Linguistas</p>
                       </div>
                   </div>
                 </div>

@@ -2,6 +2,58 @@
 import prisma from '../prismaClient.js';
 import bcrypt from 'bcryptjs';
 
+const getRanking = async (limit = 5) => {
+  const ranking = await prisma.sinalProposto.groupBy({
+    by: ['proposerId'],
+    where: {
+      status: 'APROVADO',
+    },
+    _count: {
+      proposerId: true,
+    },
+    orderBy: {
+      _count: {
+        proposerId: 'desc',
+      },
+    },
+    take: limit,
+  });
+
+  if (ranking.length === 0) {
+    return [];
+  }
+
+  const userIds = ranking.map(r => r.proposerId);
+
+  const users = await prisma.usuario.findMany({
+    where: {
+      id: {
+        in: userIds,
+      },
+    },
+    select: {
+      id: true,
+      nome: true,
+      avatarUrl: true,
+      role: true, // Adicionado para podermos diferenciar o papel do utilizador
+    },
+  });
+
+  const usersMap = new Map(users.map(user => [user.id, user]));
+
+  return ranking.map((rankItem, index) => {
+    const user = usersMap.get(rankItem.proposerId);
+    return {
+      rank: index + 1,
+      name: user?.nome || 'Utilizador Desconhecido',
+      avatarUrl: user?.avatarUrl,
+      role: user?.role === 'AVALIADOR' || user?.role === 'ADMIN' ? 'Especialista' : 'Colaborador', // Lógica para o papel
+      score: rankItem._count.proposerId,
+    };
+  });
+};
+
+
 const getAll = async () => {
   return prisma.usuario.findMany({
     include: {
@@ -219,4 +271,5 @@ export default {
   getSubmittedProposals,
   getProfileById,
   getLikedSinais, // Nova função
+  getRanking,
 };

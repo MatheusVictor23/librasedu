@@ -163,6 +163,24 @@ export const getUsersByRole = async (req, res) => {
     }
 };
 
+export const getPublicRanking = async (req, res) => {
+    try {
+        const ranking = await UserService.getRanking();
+        res.json(ranking);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar o ranking.', details: error.message });
+    }
+};
+
+export const getPublicStats = async (req, res) => {
+    try {
+        const stats = await UserService.getDashboardStats();
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar estatísticas públicas.', details: error.message });
+    }
+};
+
 export const getMyStats = async (req, res) => {
     try {
         const stats = await UserService.getUserStats(req.user.id);
