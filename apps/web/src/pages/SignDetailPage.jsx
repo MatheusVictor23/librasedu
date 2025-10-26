@@ -1,52 +1,47 @@
 // apps/web/src/pages/SignDetailPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-// 1. Adicionado MessageSquare para o ícone de comentários
-import { ArrowLeft, Bookmark, Share2, Play, Heart, User, ChevronDown, MessageSquare } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Bookmark, Share2, Play, Heart, User, MessageSquare, Send, Calendar, AlertCircle, FileText, Tag } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
 import api from '../api/axiosConfig';
-import { useAuth } from '../context/AuthContext'; // 2. Importado useAuth para pegar o user atual
+import { useAuth } from '../context/AuthContext';
 
 const SignDetailPage = () => {
   const { id } = useParams();
-  const { user } = useAuth(); // Obter o utilizador autenticado para a foto de perfil
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [sign, setSign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  // Estados para likes e saves
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
 
-  // NOVO: Estados para comentários
   const [comentarios, setComentarios] = useState([]);
   const [novoComentario, setNovoComentario] = useState('');
   const [comentarioLoading, setComentarioLoading] = useState(false);
 
-  // Dados mockados para a seção "Outros Sinais", pois a API ainda não fornece isso.
-  // Em uma implementação real, você buscaria sinais do mesmo proponente ou categoria.
-  const [authorSigns, setAuthorSigns] = useState([
-    { id: 2, nome: 'Banco de dados', categoria: 'Tecnologia e Computação' },
-    { id: 3, nome: 'Programação', categoria: 'Tecnologia e Computação' },
-    { id: 4, nome: 'Algoritmo', categoria: 'Tecnologia e Computação' }
-  ]);
+  const [recommendedSigns, setRecommendedSigns] = useState([]);
   
-  // Função para buscar todos os dados do sinal e comentários
   const fetchSignDetails = async () => {
     setLoading(true);
     try {
-      const [signRes, comentariosRes] = await Promise.all([
+      const [signRes, comentariosRes, recommendedRes] = await Promise.all([
         api.get(`/sinais/${id}`),
-        api.get(`/sinais/${id}/comentarios`)
+        api.get(`/sinais/${id}/comentarios`),
+        api.get('/sinais/recommended')
       ]);
       
       const fetchedSign = signRes.data;
       setSign(fetchedSign);
-      setComentarios(comentariosRes.data); // Define os comentários
+      setComentarios(comentariosRes.data);
+      
+      // Filtrar recomendações para não incluir o sinal atual
+      const filteredRecommended = recommendedRes.data.filter(s => s.id !== parseInt(id, 10));
+      setRecommendedSigns(filteredRecommended.slice(0, 6));
 
-      // Inicializa os estados de interação com os dados da API
       setIsLiked(fetchedSign.isLiked);
       setLikeCount(fetchedSign._count?.curtidas || 0);
       setIsSaved(fetchedSign.isSaved);
@@ -61,7 +56,7 @@ const SignDetailPage = () => {
 
   useEffect(() => {
     fetchSignDetails();
-  }, [id]); // Depende do ID do sinal para refetch
+  }, [id]);
 
   const getYouTubeVideoId = (url) => {
     if (!url) return null;
@@ -78,7 +73,6 @@ const SignDetailPage = () => {
   };
 
   const handleLike = async () => {
-    // Atualização otimista da UI
     const originalIsLiked = isLiked;
     const originalLikeCount = likeCount;
 
@@ -93,7 +87,6 @@ const SignDetailPage = () => {
       }
     } catch (error) {
       console.error("Erro ao curtir o sinal:", error);
-      // Reverte a UI em caso de erro na API
       setIsLiked(originalIsLiked);
       setLikeCount(originalLikeCount);
       alert('Ocorreu um erro ao curtir/descurtir. Tente novamente.');
@@ -111,23 +104,21 @@ const SignDetailPage = () => {
         await api.post(`/sinais/${id}/save`);
       }
     } catch (error) {
-      console.error("Erro ao guardar o sinal:", error);
+      console.error("Erro ao salvar o sinal:", error);
       setIsSaved(originalIsSaved);
       alert('Ocorreu um erro ao guardar/desguardar. Tente novamente.');
     }
   };
 
-  // NOVO: Handler para submeter um novo comentário
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (!novoComentario.trim()) return; // Não envia comentários vazios
+    if (!novoComentario.trim()) return;
     
     setComentarioLoading(true);
     try {
       const response = await api.post(`/sinais/${id}/comentarios`, { texto: novoComentario });
-      // Adiciona o novo comentário no topo da lista para uma atualização instantânea da UI
       setComentarios([response.data, ...comentarios]);
-      setNovoComentario(''); // Limpa o campo de texto
+      setNovoComentario('');
     } catch (error) {
       console.error("Erro ao enviar comentário:", error);
       alert('Não foi possível enviar o seu comentário.');
@@ -135,27 +126,72 @@ const SignDetailPage = () => {
       setComentarioLoading(false);
     }
   };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: sign.nome,
+        text: sign.descricao,
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copiado para a área de transferência!');
+    }
+  };
   
   if (loading) {
     return (
-      <MainLayout>
-        <div className="container mx-auto max-w-6xl px-4 py-8 text-center">A carregar...</div>
+      <MainLayout variant="user">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-blue mb-4"></div>
+            <p className="text-center text-brand-text-secondary">A carregar...</p>
+          </div>
+        </div>
       </MainLayout>
     );
   }
 
   if (error) {
     return (
-      <MainLayout>
-        <div className="container mx-auto max-w-6xl px-4 py-8 text-center text-red-500">{error}</div>
+      <MainLayout variant="user">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          <div className="bg-red-50 border-l-4 border-red-500 rounded-r-lg p-6">
+            <div className="flex items-start">
+              <AlertCircle size={24} className="text-red-600 mr-3 flex-shrink-0" />
+              <div>
+                <h3 className="text-red-800 font-semibold mb-1">Erro ao carregar</h3>
+                <p className="text-red-700 text-sm">{error}</p>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="mt-3 text-sm text-red-700 hover:text-red-800 font-medium underline"
+                >
+                  Voltar ao painel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </MainLayout>
     );
   }
 
   if (!sign) {
     return (
-      <MainLayout>
-        <div className="container mx-auto max-w-6xl px-4 py-8 text-center">Sinal não encontrado.</div>
+      <MainLayout variant="user">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+            <MessageSquare size={48} className="text-gray-300 mx-auto mb-3" />
+            <p className="text-brand-text-secondary">Sinal não encontrado.</p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="mt-4 text-sm text-brand-blue hover:text-brand-blue-dark font-medium underline"
+            >
+              Voltar ao painel
+            </button>
+          </div>
+        </div>
       </MainLayout>
     );
   }
@@ -163,162 +199,334 @@ const SignDetailPage = () => {
   const { sinalProposto } = sign;
 
   return (
-    <MainLayout>
+    <MainLayout variant="user">
       <div className="container mx-auto max-w-6xl px-4 py-8">
-        <Link to="/dashboard" className="inline-flex items-center text-brand-blue hover:text-brand-blue-dark mb-6 transition-colors">
-          <ArrowLeft size={20} className="mr-2" />
-          Voltar para o painel
-        </Link>
+        
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center text-brand-blue hover:text-brand-blue-dark mb-6 transition-colors font-medium group"
+        >
+          <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" />
+          Voltar
+        </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className="relative bg-gray-900 rounded-xl overflow-hidden mb-6 aspect-video">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Coluna Principal - Desktop: Esquerda (2/3) | Mobile: Ordem controlada */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Vídeo - Sempre primeiro */}
+            <div className="relative bg-brand-blue rounded-xl overflow-hidden shadow-md aspect-video group">
               {isVideoPlaying ? (
-                 <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                    title={sign.nome}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                  title={sign.nome}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
               ) : (
                 <>
                   <img src={videoThumbnail} alt={sign.nome} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-                    <button onClick={handleVideoPlay} className="bg-white/90 rounded-full p-4 hover:bg-white transition-colors">
-                      <Play size={32} className="text-brand-blue ml-1" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button 
+                      onClick={handleVideoPlay} 
+                      className="bg-white/95 backdrop-blur-sm rounded-full p-5 hover:bg-white hover:scale-110 transition-all duration-300 shadow-xl group-hover:scale-105"
+                    >
+                      <Play size={36} className="text-brand-blue ml-1" fill="currentColor" />
                     </button>
                   </div>
                 </>
               )}
             </div>
 
-            <div className="mb-6">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">{sign.nome}</h1>
-              <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-                <div className="flex items-center">
-                   {/* 3. Renderiza o avatar do proponente */}
-                   {sinalProposto?.proposer?.avatarUrl ? (
-                        <img src={`http://localhost:3000/${sinalProposto.proposer.avatarUrl}`} alt={sinalProposto.proposer.nome} className="w-10 h-10 rounded-full object-cover mr-3" />
-                    ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                            <User size={20} className="text-gray-600" />
-                        </div>
-                    )}
+            {/* Info do Sinal - Sempre segundo */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h1 className="text-2xl lg:text-3xl font-bold text-brand-text-primary mb-4">
+                {sign.nome}
+              </h1>
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  {sinalProposto?.proposer?.avatarUrl ? (
+                    <img 
+                      src={`http://localhost:3000/${sinalProposto.proposer.avatarUrl}`} 
+                      alt={sinalProposto.proposer.nome} 
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-brand-blue/20"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-brand-blue/10 flex items-center justify-center ring-2 ring-brand-blue/20">
+                      <User size={22} className="text-brand-blue" />
+                    </div>
+                  )}
                   <div>
-                    <h3 className="font-semibold text-gray-900">{sinalProposto?.proposer?.nome || 'Autor desconhecido'}</h3>
-                    <p className="text-sm text-gray-600">{sinalProposto?.proposer?.instituicao?.nome || 'Instituição não informada'}</p>
+                    <h3 className="font-semibold text-brand-text-primary">
+                      {sinalProposto?.proposer?.nome || 'Autor desconhecido'}
+                    </h3>
+                    <p className="text-sm text-brand-text-secondary">
+                      {sinalProposto?.proposer?.instituicao?.nome || 'Instituição não informada'}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <button onClick={handleLike} className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${isLiked ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                    <Heart size={16} className={`${isLiked ? 'fill-current' : ''}`} />
+                
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button 
+                    onClick={handleLike} 
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-sm font-semibold shadow-sm ${
+                      isLiked 
+                        ? 'bg-red-500 text-white hover:bg-red-600 hover:shadow-md' 
+                        : 'bg-gray-100 text-brand-text-primary hover:bg-gray-200 border border-gray-200'
+                    }`}
+                  >
+                    <Heart size={18} className={`${isLiked ? 'fill-current' : ''}`} />
                     <span>{likeCount}</span>
                   </button>
-                  <button onClick={handleSave} className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${isSaved ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                    <Bookmark size={16} className={`${isSaved ? 'fill-current' : ''}`} />
-                    <span>{isSaved ? 'Guardado' : 'Guardar'}</span>
+                  
+                  <button 
+                    onClick={handleSave} 
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-sm font-semibold shadow-sm ${
+                      isSaved 
+                        ? 'bg-brand-blue text-white hover:bg-brand-blue-dark hover:shadow-md' 
+                        : 'bg-gray-100 text-brand-text-primary hover:bg-gray-200 border border-gray-200'
+                    }`}
+                  >
+                    <Bookmark size={18} className={`${isSaved ? 'fill-current' : ''}`} />
+                    <span className="hidden sm:inline">{isSaved ? 'Salvo' : 'Salvar'}</span>
                   </button>
-                  <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium">
-                    <Share2 size={16} /> <span>Partilhar</span>
+                  
+                  <button 
+                    onClick={handleShare}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all text-sm font-semibold text-brand-text-primary border border-gray-200 shadow-sm hover:shadow-md"
+                  >
+                    <Share2 size={18} />
+                    <span className="hidden sm:inline">Compartilhar</span>
                   </button>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Publicado em: {new Date(sign.createdAt).toLocaleDateString('pt-BR')}
+
+              <div className="flex items-center gap-6 text-sm text-brand-text-secondary">
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} className="text-brand-blue" />
+                  <span>{new Date(sign.createdAt).toLocaleDateString('pt-BR')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Heart size={18} className="text-brand-blue" />
+                  <span>{likeCount} curtidas</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MessageSquare size={18} className="text-brand-blue" />
+                  <span>{comentarios.length} comentários</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Descrição - Mobile: terceiro | Desktop: hidden */}
+            <div className="lg:hidden bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-brand-text-primary mb-3 flex items-center gap-2">
+                <FileText size={20} className="text-brand-blue" />
+                <span>Descrição</span>
+              </h3>
+              <p className="text-brand-text-secondary text-sm leading-relaxed">
+                {sign.descricao}
               </p>
             </div>
-            
-            {/* --- NOVA SECÇÃO DE COMENTÁRIOS --- */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <MessageSquare size={20} /> Comentários ({comentarios.length})
-                </h3>
 
-                {/* Formulário para novo comentário */}
-                <form onSubmit={handleCommentSubmit} className="flex items-start space-x-4 mb-6">
-                    {/* Renderiza o avatar do utilizador logado para o formulário de comentário */}
-                    {user?.avatarUrl ? (
-                        <img src={`http://localhost:3000/${user.avatarUrl}`} alt={user.nome} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <User size={20} className="text-gray-600" />
-                        </div>
-                    )}
-                    <div className="flex-1">
-                        <textarea
-                            value={novoComentario}
-                            onChange={(e) => setNovoComentario(e.target.value)}
-                            placeholder="Adicione um comentário..."
-                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-blue"
-                            rows="2"
-                            disabled={comentarioLoading} // Desabilita enquanto envia
-                        />
-                        <button type="submit" disabled={comentarioLoading} className="mt-2 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-md hover:bg-brand-blue-dark disabled:bg-gray-400">
-                            {comentarioLoading ? 'A enviar...' : 'Comentar'}
-                        </button>
+            {/* Disciplina - Mobile: quarto | Desktop: hidden */}
+            <div className="lg:hidden bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-brand-text-primary mb-3 flex items-center gap-2">
+                <Tag size={20} className="text-brand-blue" />
+                <span>Disciplina</span>
+              </h3>
+              <span className="inline-block bg-brand-blue text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm">
+                {sign.disciplina.nome}
+              </span>
+            </div>
+
+            {/* Recomendações - Mobile: quinto | Desktop: hidden */}
+            <div className="lg:hidden bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-brand-text-primary mb-4">
+                Sinais Recomendados
+              </h3>
+              <div className="space-y-3">
+                {recommendedSigns.length > 0 ? recommendedSigns.map((recommendedSign) => (
+                  <button
+                    key={recommendedSign.id}
+                    onClick={() => navigate(`/sinal/${recommendedSign.id}`)}
+                    className="w-full block bg-gray-50 rounded-lg p-3 hover:bg-brand-blue/5 hover:border-brand-blue/30 transition-all border border-gray-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-12 bg-brand-blue rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Play size={18} className="text-white ml-0.5" fill="currentColor" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <h5 className="font-semibold text-brand-text-primary text-sm truncate">
+                          {recommendedSign.nome}
+                        </h5>
+                        <p className="text-xs text-brand-text-secondary truncate">
+                          {recommendedSign.disciplina?.nome || 'Sem disciplina'}
+                        </p>
+                      </div>
                     </div>
-                </form>
+                  </button>
+                )) : (
+                  <p className="text-center text-brand-text-secondary text-sm py-4">
+                    Nenhum sinal recomendado no momento.
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {/* Comentários - Mobile: sexto (último) | Desktop: terceiro */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-brand-text-primary mb-5 flex items-center gap-2">
+                <MessageSquare size={22} className="text-brand-blue" />
+                <span>Comentários ({comentarios.length})</span>
+              </h3>
 
-                {/* Lista de comentários */}
-                <div className="space-y-4">
-                    {comentarios.length > 0 ? comentarios.map(comentario => (
-                        <div key={comentario.id} className="flex items-start space-x-4">
-                            {/* Renderiza o avatar do autor do comentário */}
-                            {comentario.usuario.avatarUrl ? (
-                                <img src={`http://localhost:3000/${comentario.usuario.avatarUrl}`} alt={comentario.usuario.nome} className="w-10 h-10 rounded-full object-cover" />
-                            ) : (
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                    <User size={20} className="text-gray-600" />
-                                </div>
-                            )}
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-sm">{comentario.usuario.nome}</span>
-                                    <span className="text-xs text-gray-500">{new Date(comentario.createdAt).toLocaleDateString('pt-BR')}</span>
-                                </div>
-                                <p className="text-gray-700 text-sm">{comentario.texto}</p>
-                            </div>
-                        </div>
-                    )) : (
-                        <p className="text-center text-gray-500 py-4">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
-                    )}
+              <form onSubmit={handleCommentSubmit} className="mb-6">
+                <div className="flex gap-3">
+                  {user?.avatarUrl ? (
+                    <img 
+                      src={`http://localhost:3000/${user.avatarUrl}`} 
+                      alt={user.nome} 
+                      className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-200"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center flex-shrink-0 ring-2 ring-gray-200">
+                      <User size={18} className="text-brand-blue" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <textarea
+                      value={novoComentario}
+                      onChange={(e) => setNovoComentario(e.target.value)}
+                      placeholder="Adicione um comentário..."
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent resize-none text-brand-text-primary placeholder-gray-400"
+                      rows="3"
+                      disabled={comentarioLoading}
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={comentarioLoading || !novoComentario.trim()} 
+                      className="mt-2 px-5 py-2.5 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-brand-blue-dark disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                    >
+                      {comentarioLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>A enviar...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send size={16} />
+                          <span>Comentar</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
+              </form>
+
+              <div className="space-y-3">
+                {comentarios.length > 0 ? comentarios.map(comentario => (
+                  <div key={comentario.id} className="flex gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100">
+                    {comentario.usuario.avatarUrl ? (
+                      <img 
+                        src={`http://localhost:3000/${comentario.usuario.avatarUrl}`} 
+                        alt={comentario.usuario.nome} 
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
+                        <User size={18} className="text-brand-blue" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-sm text-brand-text-primary">
+                          {comentario.usuario.nome}
+                        </span>
+                        <span className="text-xs text-brand-text-secondary">
+                          {new Date(comentario.createdAt).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-brand-text-secondary leading-relaxed">
+                        {comentario.texto}
+                      </p>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                    <MessageSquare size={48} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-brand-text-secondary text-sm font-medium mb-1">
+                      Nenhum comentário ainda
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      Seja o primeiro a comentar sobre este sinal!
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Descrição</h3>
-              <p className="text-gray-700">{sign.descricao}</p>
+          {/* Sidebar - Desktop: Direita (1/3) | Mobile: hidden */}
+          <div className="hidden lg:block lg:col-span-1 space-y-6">
+            
+            {/* Descrição - Desktop only */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-brand-text-primary mb-3 flex items-center gap-2">
+                <FileText size={20} className="text-brand-blue" />
+                <span>Descrição</span>
+              </h3>
+              <p className="text-brand-text-secondary text-sm leading-relaxed">
+                {sign.descricao}
+              </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Disciplina</h3>
-              <p className="text-gray-700">{sign.disciplina.nome}</p>
+
+            {/* Disciplina - Desktop only */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-brand-text-primary mb-3 flex items-center gap-2">
+                <Tag size={20} className="text-brand-blue" />
+                <span>Disciplina</span>
+              </h3>
+              <span className="inline-block bg-brand-blue text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm">
+                {sign.disciplina.nome}
+              </span>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Outros de {sinalProposto?.proposer?.nome || 'Autor'}</h3>
-              <div className="mb-4 relative">
-                <button className="w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-lg flex items-center justify-between hover:bg-gray-200 transition-colors">
-                  <span>Classificar por</span> <ChevronDown size={16} />
-                </button>
-              </div>
-              <div className="space-y-4">
-                {/* Aqui você pode buscar sinais relacionados via API, se implementado */}
-                {authorSigns.map((authorSign) => (
-                  <Link key={authorSign.id} to={`/sinal/${authorSign.id}`} className="block bg-gray-100 rounded-lg p-3 hover:bg-gray-200 transition-colors">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-16 h-12 bg-gray-300 rounded flex items-center justify-center">
-                        <Play size={16} className="text-gray-600" />
+
+            {/* Recomendações - Desktop only */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-brand-text-primary mb-4">
+                Sinais Recomendados
+              </h3>
+              <div className="space-y-3">
+                {recommendedSigns.length > 0 ? recommendedSigns.map((recommendedSign) => (
+                  <button
+                    key={recommendedSign.id}
+                    onClick={() => navigate(`/sinal/${recommendedSign.id}`)}
+                    className="w-full block bg-gray-50 rounded-lg p-3 hover:bg-brand-blue/5 hover:border-brand-blue/30 transition-all border border-gray-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-12 bg-brand-blue rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Play size={18} className="text-white ml-0.5" fill="currentColor" />
                       </div>
-                      <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">{authorSign.nome}</h5>
-                        <p className="text-sm text-gray-600">{authorSign.categoria}</p>
+                      <div className="flex-1 min-w-0 text-left">
+                        <h5 className="font-semibold text-brand-text-primary text-sm truncate">
+                          {recommendedSign.nome}
+                        </h5>
+                        <p className="text-xs text-brand-text-secondary truncate">
+                          {recommendedSign.disciplina?.nome || 'Sem disciplina'}
+                        </p>
                       </div>
                     </div>
-                  </Link>
-                ))}
+                  </button>
+                )) : (
+                  <p className="text-center text-brand-text-secondary text-sm py-4">
+                    Nenhum sinal recomendado no momento.
+                  </p>
+                )}
               </div>
             </div>
           </div>
