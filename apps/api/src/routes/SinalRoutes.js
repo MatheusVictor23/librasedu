@@ -12,6 +12,8 @@ router.get('/sinais/recommended', protect, SinalController.getRecommendedSinais)
 router.get('/sinais', protect, SinalController.getAllSinais); 
 router.post('/sinais', protect, SinalController.createSinal);
 
+router.get('/recomendados/:disciplinaId/:sinalIdAtual', SinalController.getRecomendacoes);
+
 router.get('/sinais/:id', protect, SinalController.getSinalById);
 
 // Rotas de interação

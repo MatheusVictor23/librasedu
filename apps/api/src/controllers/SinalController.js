@@ -158,6 +158,28 @@ const addComentario = async (req, res) => {
   }
 };
 
+const getRecomendacoes = async (req, res) => {
+  try {
+    const { disciplinaId, sinalIdAtual } = req.params;
+    
+    const numDisciplinaId = Number(disciplinaId);
+    const numSinalIdAtual = Number(sinalIdAtual);
+
+    if (isNaN(numDisciplinaId) || isNaN(numSinalIdAtual)) {
+      return res.status(400).json({ message: "IDs inválidos." });
+    }
+
+    const recomendacoes = await SinalService.getRecomendacoes(
+      numDisciplinaId,
+      numSinalIdAtual
+    );
+    
+    res.status(200).json(recomendacoes);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar recomendações.", details: error.message });
+  }
+};
+
 export default {
   getAllSinais,
   getSinalById,
@@ -172,4 +194,5 @@ export default {
   unsaveSinal,
   getComentarios,
   addComentario,
+  getRecomendacoes
 };

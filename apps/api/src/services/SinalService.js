@@ -245,6 +245,37 @@ const addComentario = async (sinalId, usuarioId, texto) => {
   });
 };
 
+const getRecomendacoes = async (disciplinaId, sinalIdAtual) => {
+  try {
+    const sinais = await prisma.sinal.findMany({
+      where: {
+        disciplinaId: disciplinaId, // Filtra pela mesma disciplina
+        id: {
+          not: sinalIdAtual, // Exclui o sinal que o user já está a ver
+        },
+        isActive: true, // Garante que só recomendamos sinais ativos
+      },
+      take: 5, // Limita a 5 recomendações (podes ajustar este número)
+      include: {
+        disciplina: { // Inclui a disciplina para mostrar o nome
+          select: { nome: true }
+        },
+        _count: { // Conta as curtidas para relevância (opcional)
+          select: { curtidas: true },
+        },
+      },
+      orderBy: { // Ordena por mais curtidos (opcional, mas bom)
+        curtidas: {
+          _count: 'desc',
+        },
+      },
+    });
+    return sinais;
+  } catch (error) {
+    throw new Error(`Erro ao buscar recomendações: ${error.message}`);
+  }
+};
+
 export default {
   getAll,
   getById,
@@ -259,4 +290,5 @@ export default {
   unsaveSinal,
   getComentarios,
   addComentario,
+  getRecomendacoes
 };
