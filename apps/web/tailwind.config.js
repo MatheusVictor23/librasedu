@@ -12,34 +12,37 @@ export default {
         sans: ['Poppins', ...defaultTheme.fontFamily.sans],
       },
       colors: {
+        // Cores do Portal Tapiri - Nova paleta
         'brand-blue': {
-          DEFAULT: '#31487A',
-          dark: '#25385D',
+          DEFAULT: '#122651',
+          dark: '#0d1a3a',
+          light: '#1a3366',
         },
         'brand-text': {
-          primary: '#1F2937', 
-          secondary: '#6B7280',
+          primary: '#122651',
+          secondary: '#4A5568',
         },
         'brand-background': {
-          light: '#F4F6F6', // Cor de início do gradiente e da Hero Section
-          DEFAULT: '#FFFFFF', 
+          DEFAULT: '#EDEDED',
+          light: '#F5F5F5',
+          white: '#FFFFFF',
         },
       },
-      // Gradiente global da página, de cima para baixo
       backgroundImage: {
+        // Gradiente apenas para landing page
+        'landing-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        // Manter o gradiente antigo para compatibilidade (caso usado em outros lugares)
         'page-gradient': 'linear-gradient(to bottom, #F4F6F6, #39548f)',
       },
       animation: { 
         'fade-in': 'fadeIn 0.5s ease-out',
-        // --- ALTERAÇÃO AQUI ---
-        'blob': 'blob 12s infinite', // Aumentámos a duração para um movimento mais lento
+        'blob': 'blob 12s infinite',
       }, 
       keyframes: { 
         fadeIn: { 
           '0%': { opacity: 0 }, 
           '100%': { opacity: 1 } 
         },
-        // --- ANIMAÇÃO DE FLUTUAÇÃO MELHORADA ---
         blob: {
           '0%': {
             transform: 'translate(0px, 0px) scale(1)',

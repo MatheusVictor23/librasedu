@@ -5,6 +5,8 @@ import { useAuth } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import RegisterPageWrapper from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import AboutPage from './pages/AboutPage';
+import ApoemaPage from './pages/ApoemaPage';
 
 // Importação da Página do Dashboard do Usuário
 import UserDashboardPage from './pages/UserDashboardPage';
@@ -26,7 +28,7 @@ import SubmitSignPage from './pages/SubmitSignPage';
 // Importação da Página do Painel do Avaliador
 import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
 
-// ATUALIZAÇÃO: Importar a nova rota protegida
+// Importar as rotas protegidas
 import { ProtectedRoute, EvaluatorRoute, AuthenticatedRoute, ContributorRoute } from './components/ProtectedRoute';
 
 // Componente para redirecionar usuários logados
@@ -47,17 +49,18 @@ function App() {
       <Route path='/' element={<HomeRedirect />} />
       <Route path='/register' element={<RegisterPageWrapper />} />
       <Route path='/login' element={<LoginPage />} />
+      <Route path='/sobre-nos' element={<AboutPage />} />
+      <Route path='/apoema' element={<ApoemaPage />} />
       
       {/* --- Rotas do Usuário Autenticado --- */}
       <Route path='/dashboard' element={<AuthenticatedRoute><UserDashboardPage /></AuthenticatedRoute>} />
       
-      {/* ATUALIZAÇÃO: A rota de submissão agora usa ContributorRoute */}
+      {/* A rota de submissão usa ContributorRoute */}
       <Route path="/propor-sinal" element={<ContributorRoute><SubmitSignPage /></ContributorRoute>} />
 
       <Route path="/sinais" element={<AuthenticatedRoute><SignsPage /></AuthenticatedRoute>} />
       <Route path="/sinal/:id" element={<AuthenticatedRoute><SignDetailPage /></AuthenticatedRoute>} />
       <Route path="/perfil" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
-
 
       {/* --- Rotas de Administração Protegidas --- */}
       <Route path='/admin' element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
