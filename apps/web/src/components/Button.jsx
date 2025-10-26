@@ -1,8 +1,6 @@
-// src/components/Button.jsx
 import React from 'react';
 
 const Button = ({ children, variant = 'primary', className, ...props }) => {
-  // ALTERAÇÃO AQUI: Trocamos 'rounded-lg' por 'rounded-full'
   const baseStyles = 'px-6 py-3 font-semibold rounded-full shadow-md transition-colors duration-300';
 
   const styles = {
@@ -18,4 +16,3 @@ const Button = ({ children, variant = 'primary', className, ...props }) => {
 };
 
 export default Button;
-// material ui, chakra, shadcn

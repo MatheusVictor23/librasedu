@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, Building, Edit } from 'lucide-react';
 
-const UserProfileCard = ({ user, onEditProfile }) => {
+const UserProfileCard = ({ user, onEditProfile, editButtonClassName }) => {
   if (!user) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center animate-pulse">
@@ -16,6 +16,10 @@ const UserProfileCard = ({ user, onEditProfile }) => {
   const displayAvatarUrl = avatarUrl 
     ? `http://localhost:3000/${avatarUrl}`
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(nome || '')}&background=31487A&color=fff&size=128`;
+
+  // Classes padrão do botão se nenhuma customização for passada
+  const defaultButtonClasses = "bg-gray-100 text-gray-700 hover:bg-gray-200";
+  const buttonClasses = editButtonClassName || defaultButtonClasses;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 text-brand-text-primary">
@@ -44,7 +48,7 @@ const UserProfileCard = ({ user, onEditProfile }) => {
 
       <button
         onClick={onEditProfile}
-        className="mt-6 w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+        className={`mt-6 w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${buttonClasses}`}
       >
         <Edit size={16} />
         <span>Editar Perfil</span>

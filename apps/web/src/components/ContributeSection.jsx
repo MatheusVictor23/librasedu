@@ -35,7 +35,7 @@ const ContributeSection = () => {
             title="Seja nosso parceiro!"
             delay={100}
           >
-            Você pode contribuir com divulgação e blablablablabla
+            Você pode contribuir com divulgação e colaboração.
           </ContributeCard>
           
           <ContributeCard 

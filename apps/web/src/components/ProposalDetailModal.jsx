@@ -20,8 +20,6 @@ const StatusBadge = ({ status }) => {
 const ProposalDetailModal = ({ proposal, onClose }) => {
   if (!proposal) return null;
 
-  // 1. CONSTRUIR A URL DO VÍDEO BRUTO A PARTIR DO BACKEND
-  // Usamos 'videoBrutoUrl', que é o campo correto no schema do Prisma
   const videoBrutoSrc = proposal.videoBrutoUrl ? `http://localhost:3000/${proposal.videoBrutoUrl}` : null;
 
   return (
@@ -36,8 +34,6 @@ const ProposalDetailModal = ({ proposal, onClose }) => {
 
         <div className="p-6 space-y-4 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* 2. SUBSTITUIR O IFRAME DO YOUTUBE PELA TAG <video> */}
             <div className="w-full bg-gray-900 rounded-lg overflow-hidden aspect-video">
               {videoBrutoSrc ? (
                 <video
