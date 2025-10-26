@@ -55,8 +55,6 @@ router.post('/instituicoes', InstituicaoController.createInstituicao);
 router.put('/instituicoes/:id', InstituicaoController.updateInstituicao);
 router.delete('/instituicoes/:id', InstituicaoController.deleteInstituicao);
 
-
-
 // Rotas de Gestão de Sinais e Propostas
 router.get('/sinais-propostos', getAllSinaisPropostos);
 router.get('/sinais-oficiais', getAllSinaisOficiais);

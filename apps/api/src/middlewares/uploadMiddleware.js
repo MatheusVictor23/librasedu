@@ -5,12 +5,8 @@ import fs from 'fs';
 
 const uploadDir = 'uploads/';
 
-// Lógica de armazenamento com criação de diretório garantida
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // --- ALTERAÇÃO PRINCIPAL AQUI ---
-    // Garante que o diretório de upload exista antes de salvar o arquivo.
-    // A opção { recursive: true } evita erros se o diretório já existir.
     fs.mkdirSync(uploadDir, { recursive: true });
     cb(null, uploadDir);
   },
