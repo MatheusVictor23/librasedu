@@ -1,0 +1,275 @@
+// apps/api/src/services/UserService.js
+import prisma from '../prismaClient.js';
+import bcrypt from 'bcryptjs';
+
+const getRanking = async (limit = 5) => {
+  const ranking = await prisma.sinalProposto.groupBy({
+    by: ['proposerId'],
+    where: {
+      status: 'APROVADO',
+    },
+    _count: {
+      proposerId: true,
+    },
+    orderBy: {
+      _count: {
+        proposerId: 'desc',
+      },
+    },
+    take: limit,
+  });
+
+  if (ranking.length === 0) {
+    return [];
+  }
+
+  const userIds = ranking.map(r => r.proposerId);
+
+  const users = await prisma.usuario.findMany({
+    where: {
+      id: {
+        in: userIds,
+      },
+    },
+    select: {
+      id: true,
+      nome: true,
+      avatarUrl: true,
+      role: true, // Adicionado para podermos diferenciar o papel do utilizador
+    },
+  });
+
+  const usersMap = new Map(users.map(user => [user.id, user]));
+
+  return ranking.map((rankItem, index) => {
+    const user = usersMap.get(rankItem.proposerId);
+    return {
+      rank: index + 1,
+      name: user?.nome || 'Utilizador Desconhecido',
+      avatarUrl: user?.avatarUrl,
+      role: user?.role === 'AVALIADOR' || user?.role === 'ADMIN' ? 'Especialista' : 'Colaborador', // Lógica para o papel
+      score: rankItem._count.proposerId,
+    };
+  });
+};
+
+
+const getAll = async () => {
+  return prisma.usuario.findMany({
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
+const getById = async (id) => {
+  return prisma.usuario.findUnique({
+    where: { id: parseInt(id) },
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
+const getProfileById = async (id) => {
+  return prisma.usuario.findUnique({
+    where: { id: parseInt(id) },
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
+const create = async (userData) => {
+  const hashedPassword = await bcrypt.hash(userData.senha, 10);
+  // Garante que o idInstituicao seja nulo se não for fornecido
+  const dataToCreate = {
+    ...userData,
+    senha: hashedPassword,
+    idInstituicao: userData.idInstituicao ? parseInt(userData.idInstituicao, 10) : null,
+  };
+  return prisma.usuario.create({
+    data: dataToCreate,
+  });
+};
+
+const update = async (id, userData) => {
+  if (userData.senha) {
+    userData.senha = await bcrypt.hash(userData.senha, 10);
+  }
+  return prisma.usuario.update({
+    where: { id: parseInt(id) },
+    data: userData,
+  });
+};
+
+const updateProfile = async (userId, data) => {
+    const allowedUpdates = {};
+    if (data.nome && data.nome.trim()) {
+        allowedUpdates.nome = data.nome.trim();
+    }
+    if (data.avatarUrl) {
+        allowedUpdates.avatarUrl = data.avatarUrl;
+    }
+
+    if (Object.keys(allowedUpdates).length === 0) {
+        throw new Error('Nenhum dado válido para atualização foi fornecido.');
+    }
+
+    return prisma.usuario.update({
+        where: { id: parseInt(userId) },
+        data: allowedUpdates,
+    });
+};
+
+const remove = async (id) => {
+  return prisma.usuario.delete({
+    where: { id: parseInt(id) },
+  });
+};
+
+const getAllEvaluators = async () => {
+  return prisma.usuario.findMany({
+    where: {
+      role: 'AVALIADOR',
+    },
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
+const createEvaluator = async (evaluatorData) => {
+  const hashedPassword = await bcrypt.hash(evaluatorData.senha, 10);
+  
+  return prisma.usuario.create({
+    data: {
+      ...evaluatorData,
+      idInstituicao: parseInt(evaluatorData.idInstituicao, 10),
+      senha: hashedPassword,
+      role: 'AVALIADOR',
+    },
+  });
+};
+
+const getDashboardStats = async () => {
+  const [totalUsers, totalEvaluators, totalProposals, totalOfficialSignals] = await prisma.$transaction([
+    prisma.usuario.count(),
+    prisma.usuario.count({ where: { role: 'AVALIADOR' } }),
+    prisma.sinalProposto.count(),
+    prisma.sinal.count(),
+  ]);
+
+  return {
+    totalUsers,
+    totalEvaluators,
+    totalProposals,
+    totalOfficialSignals,
+  };
+};
+
+const getRecentUsers = async (limit = 5) => {
+  return prisma.usuario.findMany({
+    take: limit,
+    orderBy: {
+      createdAt: 'desc',
+    },
+    include: {
+      instituicao: true,
+    },
+  });
+};
+
+const getUsersByRole = async () => {
+  const roleCounts = await prisma.usuario.groupBy({
+    by: ['role'],
+    _count: {
+      role: true,
+    },
+  });
+  return roleCounts;
+};
+
+const getUserStats = async (userId) => {
+    const userIdInt = parseInt(userId, 10);
+
+    const submitted = prisma.sinalProposto.count({ where: { proposerId: userIdInt }});
+    const approved = prisma.sinalProposto.count({ where: { proposerId: userIdInt, status: 'APROVADO' }});
+    const rejected = prisma.sinalProposto.count({ where: { proposerId: userIdInt, status: 'REJEITADO' }});
+    const pending = prisma.sinalProposto.count({ where: { proposerId: userIdInt, status: 'PENDENTE' }});
+
+    const [submittedCount, approvedCount, rejectedCount, pendingCount] = await prisma.$transaction([submitted, approved, rejected, pending]);
+
+    const rankingResult = await prisma.$queryRaw`
+        SELECT "rank" FROM (
+            SELECT "proposerId", RANK() OVER (ORDER BY COUNT(*) DESC) as "rank"
+            FROM "SinalProposto"
+            WHERE status = 'APROVADO'
+            GROUP BY "proposerId"
+        ) as "ranked_users"
+        WHERE "proposerId" = ${userIdInt}
+    `;
+
+    const ranking = rankingResult.length > 0 ? Number(rankingResult[0].rank) : null;
+
+    return {
+        submitted: submittedCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+        pending: pendingCount,
+        ranking: ranking
+    }
+}
+
+// RENOMEADO: De getFavoritedSinais para getSavedSinais
+const getSavedSinais = async (userId) => {
+    return prisma.sinalSalvo.findMany({
+        where: { usuarioId: parseInt(userId, 10) },
+        include: {
+            sinal: true
+        },
+        orderBy: { createdAt: 'desc' }
+    })
+}
+
+const getSubmittedProposals = async (userId) => {
+    return prisma.sinalProposto.findMany({
+        where: { proposerId: parseInt(userId, 10) },
+        orderBy: { createdAt: 'desc' },
+        include: {
+            disciplina: true
+        }
+    })
+}
+
+// NOVO: Função para buscar sinais curtidos
+const getLikedSinais = async (userId) => {
+  return prisma.sinalCurtido.findMany({
+    where: { usuarioId: parseInt(userId, 10) },
+    include: {
+      sinal: true,
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+};
+
+
+export default {
+  getAll,
+  getById,
+  create,
+  update,
+  updateProfile,
+  remove,
+  getAllEvaluators,
+  createEvaluator,
+  getDashboardStats, 
+  getRecentUsers,
+  getUsersByRole,
+  getUserStats,
+  getSavedSinais, // Nome atualizado
+  getSubmittedProposals,
+  getProfileById,
+  getLikedSinais, // Nova função
+  getRanking,
+};

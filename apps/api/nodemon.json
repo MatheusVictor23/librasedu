@@ -1,0 +1,6 @@
+{
+  "watch": ["src", "prisma/schema.prisma"],
+  "ext": "js,prisma",
+  "ignore": ["node_modules"],
+  "exec": "npm run start"
+}

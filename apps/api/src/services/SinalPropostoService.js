@@ -1,0 +1,147 @@
+import prisma from '../prismaClient.js';
+
+const getAll = async () => {
+  return prisma.sinalProposto.findMany({
+    include: {
+      disciplina: {
+        include: {
+          curso: true, 
+        }
+      },
+      proposer: true,
+      avaliador: true,
+    },
+  });
+};
+
+const create = async (data) => {
+  const { nome, descricao, videoBrutoUrl, disciplinaId, proposerId } = data;
+
+  return prisma.sinalProposto.create({
+    data: {
+      nome,
+      descricao,
+      videoBrutoUrl,
+      disciplina: {
+        connect: { id: parseInt(disciplinaId) }
+      },
+      proposer: {
+        connect: { id: parseInt(proposerId) }
+      }
+    },
+  });
+};
+
+const getProposalsByDay = async (days = 7) => {
+  const today = new Date();
+  const dateLimit = new Date();
+  dateLimit.setDate(today.getDate() - days);
+
+  const proposals = await prisma.sinalProposto.groupBy({
+    by: ['createdAt'],
+    _count: {
+      id: true,
+    },
+    where: {
+      createdAt: {
+        gte: dateLimit,
+      },
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+
+  const formattedData = proposals.map(item => ({
+    date: new Date(item.createdAt).toISOString().split('T')[0], 
+    count: item._count.id,
+  }));
+
+  return formattedData;
+};
+
+const getPendingProposals = async () => {
+  return prisma.sinalProposto.findMany({
+    where: {
+      status: 'PENDENTE',
+      disciplina: {
+        status: 'APROVADO',
+      },
+    },
+    include: {
+      proposer: { select: { nome: true } },
+      disciplina: { select: { nome: true } },
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+};
+
+const getApprovedAndUnpublished = async () => {
+  return prisma.sinalProposto.findMany({
+    where: {
+      status: 'APROVADO',
+      Sinal: null,
+    },
+    include: {
+      proposer: { select: { nome: true } },
+      avaliador: { select: { nome: true } },
+      disciplina: { select: { nome: true } },
+    },
+    orderBy: {
+      updatedAt: 'asc',
+    },
+  });
+};
+
+const submitEvaluation = async (proposalId, evaluatorId, status, comentarios) => {
+  const updatedProposal = await prisma.sinalProposto.update({
+    where: { id: parseInt(proposalId) },
+    data: {
+      status,
+      avaliadorId: parseInt(evaluatorId),
+      comentariosAvaliador: comentarios,
+    },
+  });
+
+  return updatedProposal;
+};
+
+const getProposalsByStatus = async (status) => {
+  return prisma.sinalProposto.findMany({
+    where: { status }, 
+    include: {
+      proposer: { select: { nome: true } },
+      avaliador: { select: { nome: true } },
+      disciplina: { select: { nome: true } },
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+};
+
+const getById = async (id) => {
+  return prisma.sinalProposto.findUnique({
+    where: { id: parseInt(id) },
+    include: {
+      disciplina: true,
+      proposer: true,
+      avaliador: {
+        select: {
+          nome: true
+        }
+      }
+    }
+  })
+}
+
+export default {
+  getAll,
+  create,
+  getById,
+  getProposalsByDay,
+  getPendingProposals,
+  getApprovedAndUnpublished,
+  submitEvaluation,
+  getProposalsByStatus,
+};

@@ -1,0 +1,82 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+
+// Importação das Páginas Públicas
+import HomePage from './pages/HomePage';
+import RegisterPageWrapper from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+import AboutPage from './pages/AboutPage';
+import ApoemaPage from './pages/ApoemaPage';
+
+// Importação da Página do Dashboard do Usuário
+import UserDashboardPage from './pages/UserDashboardPage';
+import SignsPage from './pages/SignsPage'; 
+import ProfilePage from './pages/ProfilePage';
+import SignDetailPage from './pages/SignDetailPage';
+
+// Importação das Páginas do Painel de Administração
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminEvaluatorsPage from './pages/AdminEvaluatorsPage';
+import AdminSinaisPage from './pages/AdminSinaisPage';
+import AdminInstitutionsPage from './pages/AdminInstitutionsPage';
+import AdminDisciplinasPage from './pages/AdminDisciplinasPage';
+import ApprovedProposalsPage from './pages/ApprovedProposalsPage';
+import RejectedProposalsPage from './pages/RejectedProposalsPage';
+import SubmitSignPage from './pages/SubmitSignPage';
+
+// Importação da Página do Painel do Avaliador
+import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
+
+// Importar as rotas protegidas
+import { ProtectedRoute, EvaluatorRoute, AuthenticatedRoute, ContributorRoute } from './components/ProtectedRoute';
+
+// Componente para redirecionar usuários logados
+const HomeRedirect = () => {
+  const { user } = useAuth();
+  
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <HomePage />;
+};
+
+function App() {
+  return (
+    <Routes>
+      {/* --- Rotas Públicas --- */}
+      <Route path='/' element={<HomeRedirect />} />
+      <Route path='/register' element={<RegisterPageWrapper />} />
+      <Route path='/login' element={<LoginPage />} />
+      <Route path='/sobre-nos' element={<AboutPage />} />
+      <Route path='/apoema' element={<ApoemaPage />} />
+      
+      {/* --- Rotas do Usuário Autenticado --- */}
+      <Route path='/dashboard' element={<AuthenticatedRoute><UserDashboardPage /></AuthenticatedRoute>} />
+      
+      {/* A rota de submissão usa ContributorRoute */}
+      <Route path="/propor-sinal" element={<ContributorRoute><SubmitSignPage /></ContributorRoute>} />
+
+      <Route path="/sinais" element={<AuthenticatedRoute><SignsPage /></AuthenticatedRoute>} />
+      <Route path="/sinal/:id" element={<AuthenticatedRoute><SignDetailPage /></AuthenticatedRoute>} />
+      <Route path="/perfil" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
+
+      {/* --- Rotas de Administração Protegidas --- */}
+      <Route path='/admin' element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
+      <Route path='/admin/users' element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
+      <Route path='/admin/evaluators' element={<ProtectedRoute><AdminEvaluatorsPage /></ProtectedRoute>} />
+      <Route path='/admin/institutions' element={<ProtectedRoute><AdminInstitutionsPage /></ProtectedRoute>} />
+      <Route path='/admin/disciplinas' element={<ProtectedRoute><AdminDisciplinasPage /></ProtectedRoute>} />
+      <Route path='/admin/sinais' element={<ProtectedRoute><AdminSinaisPage /></ProtectedRoute>} />
+
+      {/* --- Rota do Avaliador Protegida --- */}
+      <Route path='/evaluator/dashboard' element={<EvaluatorRoute><EvaluatorDashboardPage /></EvaluatorRoute>} />
+      <Route path='/evaluator/approved' element={<EvaluatorRoute><ApprovedProposalsPage /></EvaluatorRoute>} />
+      <Route path='/evaluator/rejected' element={<EvaluatorRoute><RejectedProposalsPage /></EvaluatorRoute>} />
+      
+    </Routes>
+  );
+}
+
+export default App;
