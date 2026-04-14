@@ -12,3 +12,4 @@ yarn-error.log*
 apps/web/dist
 .vite
 apps/api/generated/
+.codex
